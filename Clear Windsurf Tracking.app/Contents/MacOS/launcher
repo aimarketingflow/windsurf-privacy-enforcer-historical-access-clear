@@ -1,0 +1,14 @@
+#!/bin/bash
+# Launcher for Clear Windsurf Tracking
+
+# Get the script location (will be in _Locker/WindsurfClearCache after you copy)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PARENT_DIR="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
+
+# Open Terminal and run the cleanup script
+osascript <<EOF
+tell application "Terminal"
+    activate
+    do script "cd '$PARENT_DIR' && ./clear_windsurf_tracking.sh"
+end tell
+EOF
