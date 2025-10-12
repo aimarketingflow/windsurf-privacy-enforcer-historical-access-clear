@@ -6,6 +6,9 @@
 [![Platform: macOS](https://img.shields.io/badge/Platform-macOS-blue.svg)](https://www.apple.com/macos/)
 [![Shell: Bash](https://img.shields.io/badge/Shell-Bash-green.svg)](https://www.gnu.org/software/bash/)
 
+> **🎨 NEW: PyQt6 GUI Available!**  
+> We've added a modern graphical interface (`windsurf_privacy_gui.py`) for easier use. **Note:** The GUI is currently in active development and may contain bugs. Please report any issues you encounter via [GitHub Issues](https://github.com/aimarketingflow/windsurf-privacy-enforcer-historical-access-clear/issues). See [GUI_README.md](GUI_README.md) for details.
+
 ## 🚨 Overview
 
 This toolkit provides comprehensive privacy protection for Windsurf IDE users. Based on extensive security research documenting **active data exfiltration** and **workspace boundary violations**, these tools help you:
@@ -24,6 +27,35 @@ This toolkit provides comprehensive privacy protection for Windsurf IDE users. B
 - **Persistent tracking IDs** for cross-session profiling
 
 ## 📦 Toolkit Components
+
+### 🎨 NEW: `windsurf_privacy_gui.py` - GUI Application
+**Modern PyQt6 graphical interface (BETA)**
+
+⚠️ **Development Status:** This GUI is in active development and may contain bugs. We appreciate bug reports via GitHub Issues!
+
+**Features:**
+- 🏠 **Dashboard** - Real-time status monitoring with intelligent recommendations
+- 🔍 **Audit** - Run security audits with live output
+- 🧹 **Cleanup** - Enhanced cleanup with 4 backup options
+- 💾 **Backups** - Comprehensive backup management (Chat, Audit Reports, Full Backups, Export/Import)
+
+**Quick Start:**
+```bash
+# Install PyQt6
+pip install PyQt6
+
+# Run GUI
+python3 windsurf_privacy_gui.py
+```
+
+**Known Limitations:**
+- macOS only (Linux/Windows support coming)
+- Some interactive script prompts need manual handling
+- Export/Import features are experimental
+
+**See [GUI_README.md](GUI_README.md) for complete documentation.**
+
+---
 
 ### 1. `audit_windsurf_access.sh` 🔍
 **Comprehensive security assessment tool**
