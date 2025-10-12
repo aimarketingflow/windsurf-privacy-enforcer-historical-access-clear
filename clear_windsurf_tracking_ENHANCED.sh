@@ -37,20 +37,117 @@ fi
 
 # Backup option
 echo -e "${BLUE}Do you want to backup current data before clearing?${NC}"
-read -p "Create backup? (y/n): " CREATE_BACKUP
+echo ""
+echo "Backup options:"
+echo "  1) No backup (skip)"
+echo "  2) Full backup (all Windsurf data)"
+echo "  3) Chat history only (recommended)"
+echo "  4) Full backup + separate chat export"
+echo ""
+read -p "Select option (1-4): " BACKUP_OPTION
 
-if [ "$CREATE_BACKUP" = "y" ] || [ "$CREATE_BACKUP" = "Y" ]; then
+if [ "$BACKUP_OPTION" = "2" ] || [ "$BACKUP_OPTION" = "4" ]; then
+    # Full backup
     BACKUP_DIR="$HOME/windsurf_backup_$(date +%Y%m%d_%H%M%S)"
     mkdir -p "$BACKUP_DIR"
     
-    echo "Creating backup in: $BACKUP_DIR"
+    echo ""
+    echo -e "${CYAN}Creating full backup...${NC}"
+    echo "Location: $BACKUP_DIR"
     
     if [ -d ~/Library/Application\ Support/Windsurf ]; then
         cp -r ~/Library/Application\ Support/Windsurf "$BACKUP_DIR/"
-        echo -e "${GREEN}✅ Backup created${NC}"
+        echo -e "${GREEN}✅ Full backup created${NC}"
     fi
-    echo ""
 fi
+
+if [ "$BACKUP_OPTION" = "3" ] || [ "$BACKUP_OPTION" = "4" ]; then
+    # Chat history backup
+    CHAT_BACKUP_DIR="$HOME/WindsurfChatBackup_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$CHAT_BACKUP_DIR"
+    
+    echo ""
+    echo -e "${CYAN}Creating chat history backup...${NC}"
+    echo "Location: $CHAT_BACKUP_DIR"
+    
+    TOTAL_CHATS=0
+    TOTAL_WORKSPACES=0
+    
+    if [ -d ~/Library/Application\ Support/Windsurf/User/workspaceStorage ]; then
+        for workspace in ~/Library/Application\ Support/Windsurf/User/workspaceStorage/*/; do
+            if [ -f "$workspace/state.vscdb" ]; then
+                WORKSPACE_ID=$(basename "$workspace")
+                
+                # Check if this workspace has chat data
+                CHAT_COUNT=$(sqlite3 "$workspace/state.vscdb" \
+                    "SELECT COUNT(*) FROM ItemTable WHERE key LIKE '%chat%' OR key LIKE '%cascade%';" 2>/dev/null)
+                
+                if [ "$CHAT_COUNT" -gt 0 ]; then
+                    ((TOTAL_WORKSPACES++))
+                    TOTAL_CHATS=$((TOTAL_CHATS + CHAT_COUNT))
+                    
+                    # Create workspace backup directory
+                    WORKSPACE_BACKUP="$CHAT_BACKUP_DIR/$WORKSPACE_ID"
+                    mkdir -p "$WORKSPACE_BACKUP"
+                    
+                    # Export chat data to JSON
+                    sqlite3 "$workspace/state.vscdb" <<EOF > "$WORKSPACE_BACKUP/chat_data.json" 2>/dev/null
+.mode json
+SELECT key, value FROM ItemTable 
+WHERE key LIKE '%chat%' OR key LIKE '%cascade%'
+ORDER BY key;
+EOF
+                    
+                    # Export chat data to CSV
+                    sqlite3 "$workspace/state.vscdb" <<EOF > "$WORKSPACE_BACKUP/chat_data.csv" 2>/dev/null
+.mode csv
+.headers on
+SELECT key, value FROM ItemTable 
+WHERE key LIKE '%chat%' OR key LIKE '%cascade%'
+ORDER BY key;
+EOF
+                    
+                    # Export full database as backup
+                    cp "$workspace/state.vscdb" "$WORKSPACE_BACKUP/state.vscdb.backup"
+                fi
+            fi
+        done
+        
+        if [ "$TOTAL_WORKSPACES" -gt 0 ]; then
+            # Create master index
+            cat > "$CHAT_BACKUP_DIR/README.txt" << INDEX
+Windsurf Chat History Backup
+=============================
+Backup Date: $(date)
+Total Workspaces: $TOTAL_WORKSPACES
+Total Chat Entries: $TOTAL_CHATS
+
+Each workspace directory contains:
+- chat_data.json: JSON format
+- chat_data.csv: CSV format (open in Excel/Numbers)
+- state.vscdb.backup: Full database backup
+
+To view your chats:
+Open any chat_data.csv file in Excel, Numbers, or Google Sheets.
+
+To restore:
+1. Close Windsurf
+2. Copy state.vscdb.backup to:
+   ~/Library/Application Support/Windsurf/User/workspaceStorage/<workspace_id>/state.vscdb
+3. Restart Windsurf
+INDEX
+            
+            echo -e "${GREEN}✅ Chat history backed up${NC}"
+            echo "   Workspaces: $TOTAL_WORKSPACES"
+            echo "   Chat entries: $TOTAL_CHATS"
+        else
+            echo -e "${YELLOW}⚠️  No chat history found${NC}"
+            rmdir "$CHAT_BACKUP_DIR" 2>/dev/null
+        fi
+    fi
+fi
+
+echo ""
 
 # Show what will be cleared
 echo "=========================================="

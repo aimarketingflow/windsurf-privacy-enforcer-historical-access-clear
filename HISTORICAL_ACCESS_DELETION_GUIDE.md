@@ -518,10 +518,110 @@ The test suite is **intentionally strict** to catch any potential issues. In a r
 
 ---
 
+## Chat History Backup
+
+### Why Backup Chat History?
+
+Even though the enhanced cleanup script preserves chat history, it's good practice to backup your conversations:
+- **Safety net** - In case something goes wrong
+- **Portability** - View chats outside Windsurf
+- **Archive** - Keep historical conversations
+- **Analysis** - Search across all chats easily
+
+### Using the Chat Backup Tool
+
+**Standalone Backup:**
+```bash
+./backup_windsurf_chat.sh
+```
+
+**Integrated into Cleanup:**
+When you run `./clear_windsurf_tracking_ENHANCED.sh`, you'll see:
+```
+Backup options:
+  1) No backup (skip)
+  2) Full backup (all Windsurf data)
+  3) Chat history only (recommended)  ← Choose this
+  4) Full backup + separate chat export
+```
+
+### What Gets Backed Up
+
+For each workspace with chat history:
+- **`chat_data.csv`** - Spreadsheet format (open in Excel/Numbers/Google Sheets)
+- **`chat_data.json`** - JSON format for programmatic access
+- **`state.vscdb.backup`** - Full database for complete restoration
+- **`README.txt`** - Instructions for that workspace
+
+### Viewing Your Backed Up Chats
+
+**Method 1: Excel/Numbers (Easiest)**
+1. Open Finder
+2. Navigate to `~/WindsurfChatBackup_YYYYMMDD_HHMMSS/`
+3. Open any workspace folder
+4. Double-click `chat_data.csv`
+5. View in Excel, Numbers, or Google Sheets
+
+**Method 2: Text Editor**
+1. Open any `chat_data.json` file
+2. Search for specific conversations
+3. Copy/paste content as needed
+
+**Method 3: Command Line**
+```bash
+# Find all chat backups
+ls -lt ~/WindsurfChatBackup_*
+
+# View latest backup
+open ~/WindsurfChatBackup_$(ls -t ~ | grep WindsurfChatBackup | head -1)
+
+# Search for specific text in all chats
+grep -r "search term" ~/WindsurfChatBackup_*/*/chat_data.csv
+```
+
+### Restoring Chat History
+
+If you need to restore chat history from backup:
+
+```bash
+# 1. Close Windsurf
+pkill -9 Windsurf
+
+# 2. Navigate to backup
+cd ~/WindsurfChatBackup_YYYYMMDD_HHMMSS/<workspace_id>/
+
+# 3. Copy database back
+cp state.vscdb.backup \
+   ~/Library/Application\ Support/Windsurf/User/workspaceStorage/<workspace_id>/state.vscdb
+
+# 4. Restart Windsurf
+open -a Windsurf
+```
+
+### Backup Storage Recommendations
+
+**Local Storage:**
+- Keep recent backups in `~/WindsurfChatBackup_*/`
+- Delete old backups after 30 days
+
+**Cloud Storage:**
+```bash
+# Copy to iCloud
+cp -r ~/WindsurfChatBackup_* ~/Library/Mobile\ Documents/com~apple~CloudDocs/
+
+# Copy to Dropbox
+cp -r ~/WindsurfChatBackup_* ~/Dropbox/WindsurfBackups/
+
+# Create archive
+tar -czf WindsurfChats_$(date +%Y%m%d).tar.gz ~/WindsurfChatBackup_*
+```
+
+---
+
 ## Common Questions & Clarifications
 
 ### Q1: Is my chat history safe?
-**A:** Yes! All 51 chat entries across 17 workspaces are preserved. You won't lose any Cascade conversations.
+**A:** Yes! All 51 chat entries across 17 workspaces are preserved. You won't lose any Cascade conversations. However, we recommend backing up your chats using `./backup_windsurf_chat.sh` before cleanup for extra safety.
 
 ### Q2: Do I need to re-login?
 **A:** No! Both GitHub and Windsurf authentication are preserved. You'll stay logged in.
@@ -583,25 +683,50 @@ chmod +x *.sh
 # Step 1: Safety check (verify what will be preserved)
 ./verify_preservation_safety.sh
 
-# Step 2: Close Windsurf
+# Step 2: Optional - Backup chat history (RECOMMENDED)
+./backup_windsurf_chat.sh
+# This creates: ~/WindsurfChatBackup_YYYYMMDD_HHMMSS/
+# With CSV files you can open in Excel
+
+# Step 3: Close Windsurf
 pkill -9 Windsurf
 pkill -9 language_server_macos_arm
 
-# Step 3: Run enhanced cleanup
+# Step 4: Run enhanced cleanup
 ./clear_windsurf_tracking_ENHANCED.sh
+# The script will offer backup options:
+#   1) No backup (skip)
+#   2) Full backup (all Windsurf data)
+#   3) Chat history only (recommended)
+#   4) Full backup + separate chat export
 
-# Step 4: Verify complete deletion
+# Step 5: Verify complete deletion
 ./test_historical_access_deletion.sh
 
-# Step 5: Review results
+# Step 6: Review results
 # Look for 80%+ pass rate (excellent)
 # Review any failures (likely acceptable)
 
-# Step 6: Optional - Delete backup files
+# Step 7: Optional - Delete backup files
 rm ~/Library/Application\ Support/Windsurf/User/globalStorage/*.backup
 
-# Step 7: Restart Windsurf
+# Step 8: Restart Windsurf
 open -a Windsurf
+```
+
+### Chat Backup Only (No Cleanup)
+
+If you just want to backup your chat histories without cleaning:
+
+```bash
+# Standalone chat backup
+./backup_windsurf_chat.sh
+
+# Output location
+open ~/WindsurfChatBackup_$(ls -t ~ | grep WindsurfChatBackup | head -1)
+
+# View chats in Excel/Numbers
+# Open any chat_data.csv file from the backup folder
 ```
 
 ### Continuous Monitoring

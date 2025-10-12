@@ -130,6 +130,40 @@ Run BEFORE cleanup to verify what will be preserved:
 ./test_historical_access_deletion.sh
 ```
 
+### 2e. `backup_windsurf_chat.sh` 💾
+**Chat history backup tool (NEW)**
+
+Exports all Windsurf/Cascade chat histories to readable formats:
+- **CSV format** - Open in Excel/Numbers/Google Sheets
+- **JSON format** - For programmatic access
+- **Full database backup** - For complete restoration
+
+**Features:**
+- Backs up all 21 workspaces automatically
+- Creates readable CSV files for each workspace
+- Includes restoration instructions
+- Preserves all chat metadata
+
+**Usage:**
+```bash
+./backup_windsurf_chat.sh
+```
+
+**Output:**
+- `~/WindsurfChatBackup_YYYYMMDD_HHMMSS/`
+  - Each workspace folder contains:
+    - `chat_data.csv` - Spreadsheet format
+    - `chat_data.json` - JSON format
+    - `state.vscdb.backup` - Full database
+    - `README.txt` - Instructions
+
+**Integrated into Enhanced Cleanup:**
+The enhanced cleanup script now offers backup options:
+1. No backup (skip)
+2. Full backup (all Windsurf data)
+3. Chat history only (recommended)
+4. Full backup + separate chat export
+
 ### 3. `sandbox_windsurf.sh` 🔒
 **Interactive sandboxing wizard**
 
