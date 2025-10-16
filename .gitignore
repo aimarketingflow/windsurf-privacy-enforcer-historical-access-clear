@@ -22,6 +22,12 @@ windsurf_cloud_tracking/
 *.pcapng
 RecentPCAPs/
 
+# Private data
+Sample of *
+Spindump*
+baselines/
+_Chatlogs/
+
 # Temporary files
 *.tmp
 *.swp
