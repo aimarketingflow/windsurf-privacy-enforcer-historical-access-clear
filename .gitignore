@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Backups and logs
+windsurf_backup_*/
+WindsurfBackups/
+windsurf_cloud_tracking/
+*.log
+*.pcap
+
+# Temporary files
+*.tmp
+*.swp
+*~
+cleanup_wrapper_gui.sh
+
+# IDE
+.vscode/
+.idea/
+
+# Database
+*.db
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
