@@ -19,6 +19,8 @@ WindsurfBackups/
 windsurf_cloud_tracking/
 *.log
 *.pcap
+*.pcapng
+RecentPCAPs/
 
 # Temporary files
 *.tmp
