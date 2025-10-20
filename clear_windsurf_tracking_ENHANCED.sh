@@ -35,6 +35,19 @@ if pgrep -x "Windsurf" > /dev/null; then
     echo ""
 fi
 
+# Python environment preservation option
+echo -e "${BLUE}Do you want to preserve Python virtual environments?${NC}"
+echo ""
+echo "This will protect:"
+echo "  • venv/ directories"
+echo "  • .venv/ directories"
+echo "  • env/ directories"
+echo "  • requirements.txt files"
+echo "  • pip installations"
+echo ""
+read -p "Preserve Python environments? (y/n): " PRESERVE_VENV
+echo ""
+
 # Backup option
 echo -e "${BLUE}Do you want to backup current data before clearing?${NC}"
 echo ""
@@ -184,6 +197,10 @@ echo "  • Extensions"
 echo "  • Keybindings"
 echo "  • Chat history with Cascade"
 echo "  • GitHub/Windsurf login"
+if [ "$PRESERVE_VENV" = "y" ] || [ "$PRESERVE_VENV" = "Y" ]; then
+    echo "  • Python virtual environments (venv/, .venv/, env/)"
+    echo "  • requirements.txt files"
+fi
 echo ""
 
 echo "=========================================="
@@ -241,9 +258,22 @@ if [ -d ~/Library/Application\ Support/Windsurf/User/workspaceStorage ]; then
                 
                 sqlite3 "$workspace/state.vscdb" \
                     "DELETE FROM ItemTable WHERE key LIKE '%fileHistory%';" 2>/dev/null
-                    
-                sqlite3 "$workspace/state.vscdb" \
-                    "DELETE FROM ItemTable WHERE value LIKE '%/Users/%' AND key NOT LIKE '%chat%' AND key NOT LIKE '%cascade%';" 2>/dev/null
+                
+                # Clear file paths, but preserve venv-related paths if requested
+                if [ "$PRESERVE_VENV" = "y" ] || [ "$PRESERVE_VENV" = "Y" ]; then
+                    sqlite3 "$workspace/state.vscdb" \
+                        "DELETE FROM ItemTable WHERE value LIKE '%/Users/%' 
+                         AND key NOT LIKE '%chat%' 
+                         AND key NOT LIKE '%cascade%'
+                         AND value NOT LIKE '%venv%'
+                         AND value NOT LIKE '%.venv%'
+                         AND value NOT LIKE '%/env/%'
+                         AND value NOT LIKE '%requirements.txt%'
+                         AND value NOT LIKE '%python%interpreter%';" 2>/dev/null
+                else
+                    sqlite3 "$workspace/state.vscdb" \
+                        "DELETE FROM ItemTable WHERE value LIKE '%/Users/%' AND key NOT LIKE '%chat%' AND key NOT LIKE '%cascade%';" 2>/dev/null
+                fi
             fi
         fi
     done
@@ -305,9 +335,21 @@ if [ -f ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb ]
     sqlite3 ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb \
         "DELETE FROM ItemTable WHERE key LIKE '%workspaceStorage%';" 2>/dev/null
     
-    # Remove any file paths (but keep auth tokens)
-    sqlite3 ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb \
-        "DELETE FROM ItemTable WHERE value LIKE '%/Users/%' AND key NOT LIKE '%github%' AND key NOT LIKE '%auth%';" 2>/dev/null
+    # Remove any file paths (but keep auth tokens and optionally venv paths)
+    if [ "$PRESERVE_VENV" = "y" ] || [ "$PRESERVE_VENV" = "Y" ]; then
+        sqlite3 ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb \
+            "DELETE FROM ItemTable WHERE value LIKE '%/Users/%' 
+             AND key NOT LIKE '%github%' 
+             AND key NOT LIKE '%auth%'
+             AND value NOT LIKE '%venv%'
+             AND value NOT LIKE '%.venv%'
+             AND value NOT LIKE '%/env/%'
+             AND value NOT LIKE '%requirements.txt%'
+             AND value NOT LIKE '%python%interpreter%';" 2>/dev/null
+    else
+        sqlite3 ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb \
+            "DELETE FROM ItemTable WHERE value LIKE '%/Users/%' AND key NOT LIKE '%github%' AND key NOT LIKE '%auth%';" 2>/dev/null
+    fi
     
     # Vacuum to reclaim space
     sqlite3 ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb "VACUUM;" 2>/dev/null
@@ -419,6 +461,11 @@ echo "  • Snippets"
 echo "  • Chat history with Cascade"
 echo "  • Windsurf login (you'll stay logged in)"
 echo "  • GitHub authentication"
+if [ "$PRESERVE_VENV" = "y" ] || [ "$PRESERVE_VENV" = "Y" ]; then
+    echo "  • Python virtual environments (venv/, .venv/, env/)"
+    echo "  • requirements.txt files"
+    echo "  • Python interpreter settings"
+fi
 echo ""
 
 if [ "$CREATE_BACKUP" = "y" ] || [ "$CREATE_BACKUP" = "Y" ]; then

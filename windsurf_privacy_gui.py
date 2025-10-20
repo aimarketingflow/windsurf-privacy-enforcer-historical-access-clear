@@ -706,6 +706,30 @@ class CleanupWidget(QWidget):
         backup_group.setLayout(backup_layout)
         layout.addWidget(backup_group)
         
+        # Python environment preservation option
+        preserve_group = QGroupBox("Python Environment Preservation")
+        preserve_layout = QVBoxLayout()
+        
+        self.preserve_venv = QCheckBox("Preserve Python virtual environments")
+        self.preserve_venv.setChecked(True)  # Default to preserving
+        preserve_layout.addWidget(self.preserve_venv)
+        
+        preserve_desc = QLabel(
+            "   This will protect:\n"
+            "   • venv/ directories\n"
+            "   • .venv/ directories\n"
+            "   • env/ directories\n"
+            "   • requirements.txt files\n"
+            "   • Python interpreter settings\n\n"
+            "   ✅ Recommended: Keep checked to avoid reinstalling packages"
+        )
+        preserve_desc.setStyleSheet("color: #2ecc71; font-size: 11px; margin-left: 20px;")
+        preserve_desc.setWordWrap(True)
+        preserve_layout.addWidget(preserve_desc)
+        
+        preserve_group.setLayout(preserve_layout)
+        layout.addWidget(preserve_group)
+        
         # Warning
         warning = QLabel(
             "⚠️  <b>WARNING: This will COMPLETELY clear ALL workspace history!</b><br><br>"
@@ -788,25 +812,42 @@ class CleanupWidget(QWidget):
             4: "Full backup + chat export"
         }.get(backup_option, "Unknown")
         
+        # Get venv preservation option
+        preserve_venv = self.preserve_venv.isChecked()
+        preserve_text = "y" if preserve_venv else "n"
+        
         # Confirmation dialog
         msg = QMessageBox(self)
         msg.setIcon(QMessageBox.Icon.Warning)
         msg.setWindowTitle("Confirm Enhanced Cleanup")
         msg.setText("<b>Are you sure you want to run the enhanced cleanup?</b>")
+        
+        preserved_items = (
+            "✅ User settings<br>"
+            "✅ Extensions<br>"
+            "✅ Keybindings<br>"
+            "✅ Chat history with Cascade<br>"
+            "✅ GitHub/Windsurf authentication"
+        )
+        
+        if preserve_venv:
+            preserved_items += (
+                "<br>✅ Python virtual environments (venv/, .venv/, env/)<br>"
+                "✅ requirements.txt files<br>"
+                "✅ Python interpreter settings"
+            )
+        
         msg.setInformativeText(
-            f"<b>Backup Option:</b> {backup_text}<br><br>"
+            f"<b>Backup Option:</b> {backup_text}<br>"
+            f"<b>Preserve Python Environments:</b> {'Yes' if preserve_venv else 'No'}<br><br>"
             "<b>What will be DELETED:</b><br>"
             "• Machine/Device tracking IDs<br>"
             "• ALL workspace associations (16+ directories)<br>"
             "• Backup workspace history<br>"
             "• Recent file history<br>"
             "• ~26 MB tracking data and cache<br><br>"
-            "<b>What will be PRESERVED:</b><br>"
-            "✅ User settings<br>"
-            "✅ Extensions<br>"
-            "✅ Keybindings<br>"
-            "✅ Chat history with Cascade<br>"
-            "✅ GitHub/Windsurf authentication<br><br>"
+            f"<b>What will be PRESERVED:</b><br>"
+            f"{preserved_items}<br><br>"
             "<b>This action cannot be undone without a backup!</b>"
         )
         msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
@@ -825,6 +866,7 @@ class CleanupWidget(QWidget):
         self.output.clear()
         self.output.append("Starting enhanced cleanup...\n")
         self.output.append(f"Backup option: {backup_option} ({backup_text})\n")
+        self.output.append(f"Preserve Python environments: {'Yes' if preserve_venv else 'No'}\n")
         self.output.append("Creating wrapper script to handle interactive prompts...\n")
         
         # Create a wrapper script that auto-answers the prompts
@@ -833,8 +875,9 @@ class CleanupWidget(QWidget):
 # Auto-generated wrapper for GUI cleanup
 # Automatically answers prompts for non-interactive execution
 
-# Auto-answer: quit Windsurf (y), backup option ({backup_option}), confirm (yes)
+# Auto-answer: quit Windsurf (y), preserve venv ({preserve_text}), backup option ({backup_option}), confirm (yes)
 echo "y
+{preserve_text}
 {backup_option}
 yes" | "{script_path}"
 """
