@@ -3272,6 +3272,325 @@ class FolderAccessWidget(QWidget):
             QMessageBox.critical(self, "Error", f"Failed to remove folders:\n{str(e)}")
 
 
+class SandboxWidget(QWidget):
+    """Sandbox and permission reset tab"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+        
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # Title
+        title = QLabel("Sandbox & Permission Reset")
+        title.setFont(QFont("Arial", 18, QFont.Weight.Bold))
+        layout.addWidget(title)
+        
+        desc = QLabel(
+            "Isolate Windsurf and force it to re-request permissions. "
+            "Useful for testing, resetting permissions, or starting fresh."
+        )
+        desc.setWordWrap(True)
+        desc.setStyleSheet("color: #95a5a6; margin-bottom: 15px;")
+        layout.addWidget(desc)
+        
+        # Reset TCC Database section
+        tcc_group = QGroupBox("🔄 Reset macOS Permissions (TCC Database)")
+        tcc_layout = QVBoxLayout()
+        
+        tcc_desc = QLabel(
+            "Reset Windsurf's macOS privacy permissions. This will force Windsurf to "
+            "re-request permissions for Camera, Microphone, Full Disk Access, etc."
+        )
+        tcc_desc.setWordWrap(True)
+        tcc_desc.setStyleSheet("color: #95a5a6; margin-bottom: 10px;")
+        tcc_layout.addWidget(tcc_desc)
+        
+        tcc_warning = QLabel(
+            "⚠️ <b>Warning:</b> This requires sudo access and will reset ALL permissions for Windsurf."
+        )
+        tcc_warning.setWordWrap(True)
+        tcc_warning.setStyleSheet("color: #e67e22; margin-bottom: 10px;")
+        tcc_layout.addWidget(tcc_warning)
+        
+        btn_reset_tcc = QPushButton("🔄 Reset TCC Permissions")
+        btn_reset_tcc.clicked.connect(self.reset_tcc_permissions)
+        btn_reset_tcc.setStyleSheet("background-color: #e67e22;")
+        tcc_layout.addWidget(btn_reset_tcc)
+        
+        tcc_group.setLayout(tcc_layout)
+        layout.addWidget(tcc_group)
+        
+        # Clear folder access section
+        folder_group = QGroupBox("📁 Clear All Folder Access")
+        folder_layout = QVBoxLayout()
+        
+        folder_desc = QLabel(
+            "Remove all folder tracking from Windsurf. This will make Windsurf "
+            "re-request folder access when you next open a project."
+        )
+        folder_desc.setWordWrap(True)
+        folder_desc.setStyleSheet("color: #95a5a6; margin-bottom: 10px;")
+        folder_layout.addWidget(folder_desc)
+        
+        btn_clear_folders = QPushButton("🗑️ Clear All Folder Access")
+        btn_clear_folders.clicked.connect(self.clear_all_folder_access)
+        btn_clear_folders.setStyleSheet("background-color: #e74c3c;")
+        folder_layout.addWidget(btn_clear_folders)
+        
+        folder_group.setLayout(folder_layout)
+        layout.addWidget(folder_group)
+        
+        # Sandbox mode section
+        sandbox_group = QGroupBox("🧪 Sandbox Mode")
+        sandbox_layout = QVBoxLayout()
+        
+        sandbox_desc = QLabel(
+            "Launch Windsurf in a sandboxed environment with restricted permissions. "
+            "This uses macOS sandbox-exec to limit what Windsurf can access."
+        )
+        sandbox_desc.setWordWrap(True)
+        sandbox_desc.setStyleSheet("color: #95a5a6; margin-bottom: 10px;")
+        sandbox_layout.addWidget(sandbox_desc)
+        
+        sandbox_info = QLabel(
+            "💡 <b>Sandbox will:</b><br>"
+            "• Block network access<br>"
+            "• Restrict file system access<br>"
+            "• Prevent tracking<br>"
+            "• Force permission re-requests"
+        )
+        sandbox_info.setWordWrap(True)
+        sandbox_info.setStyleSheet("color: #3498db; margin-bottom: 10px;")
+        sandbox_layout.addWidget(sandbox_info)
+        
+        btn_sandbox = QPushButton("🧪 Launch Windsurf in Sandbox")
+        btn_sandbox.clicked.connect(self.launch_sandbox)
+        btn_sandbox.setStyleSheet("background-color: #3498db;")
+        sandbox_layout.addWidget(btn_sandbox)
+        
+        sandbox_group.setLayout(sandbox_layout)
+        layout.addWidget(sandbox_group)
+        
+        # Reset all section
+        reset_group = QGroupBox("🔥 Nuclear Option: Reset Everything")
+        reset_layout = QVBoxLayout()
+        
+        reset_desc = QLabel(
+            "Complete reset of Windsurf permissions and tracking. "
+            "This combines all reset options above."
+        )
+        reset_desc.setWordWrap(True)
+        reset_desc.setStyleSheet("color: #95a5a6; margin-bottom: 10px;")
+        reset_layout.addWidget(reset_desc)
+        
+        reset_warning = QLabel(
+            "⚠️ <b>WARNING:</b> This will reset ALL Windsurf permissions and tracking. "
+            "Windsurf will need to re-request everything."
+        )
+        reset_warning.setWordWrap(True)
+        reset_warning.setStyleSheet("color: #e74c3c; margin-bottom: 10px;")
+        reset_layout.addWidget(reset_warning)
+        
+        btn_reset_all = QPushButton("🔥 Reset Everything")
+        btn_reset_all.clicked.connect(self.reset_everything)
+        btn_reset_all.setStyleSheet("background-color: #c0392b;")
+        reset_layout.addWidget(btn_reset_all)
+        
+        reset_group.setLayout(reset_layout)
+        layout.addWidget(reset_group)
+        
+        layout.addStretch()
+        self.setLayout(layout)
+    
+    def reset_tcc_permissions(self):
+        """Reset TCC database permissions for Windsurf"""
+        reply = QMessageBox.question(
+            self,
+            "Reset TCC Permissions",
+            "This will reset ALL macOS privacy permissions for Windsurf.\n\n"
+            "Windsurf will need to re-request:\n"
+            "• Camera access\n"
+            "• Microphone access\n"
+            "• Full Disk Access\n"
+            "• Automation permissions\n"
+            "• etc.\n\n"
+            "This requires sudo access. Continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            import subprocess
+            
+            # Reset TCC for Windsurf
+            commands = [
+                "sudo tccutil reset All com.codeium.windsurf",
+                "sudo tccutil reset Camera com.codeium.windsurf",
+                "sudo tccutil reset Microphone com.codeium.windsurf",
+                "sudo tccutil reset SystemPolicyAllFiles com.codeium.windsurf"
+            ]
+            
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Resetting TCC Permissions")
+            dialog.setGeometry(100, 100, 600, 400)
+            
+            layout = QVBoxLayout()
+            output = QTextEdit()
+            output.setReadOnly(True)
+            output.setStyleSheet("background-color: #1e1e1e; color: #d4d4d4; font-family: monospace;")
+            layout.addWidget(output)
+            
+            close_btn = QPushButton("Close")
+            close_btn.clicked.connect(dialog.close)
+            layout.addWidget(close_btn)
+            
+            dialog.setLayout(layout)
+            dialog.show()
+            
+            output.append("Resetting TCC permissions...\n")
+            output.append("You may be prompted for your password.\n\n")
+            
+            for cmd in commands:
+                output.append(f"Running: {cmd}\n")
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                output.append(result.stdout)
+                if result.stderr:
+                    output.append(f"Error: {result.stderr}\n")
+                output.append("")
+            
+            output.append("\n✅ TCC permissions reset complete!")
+            output.append("\nWindsurf will re-request permissions on next launch.")
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to reset TCC:\n{str(e)}")
+    
+    def clear_all_folder_access(self):
+        """Clear all folder access tracking"""
+        reply = QMessageBox.question(
+            self,
+            "Clear All Folder Access",
+            "This will remove ALL folder tracking from Windsurf.\n\n"
+            "Windsurf will need to re-request folder access when you:\n"
+            "• Open a project\n"
+            "• Access files\n"
+            "• Use workspaces\n\n"
+            "Continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            import os
+            import sqlite3
+            import json
+            
+            global_db = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/state.vscdb")
+            
+            conn = sqlite3.connect(global_db)
+            cursor = conn.cursor()
+            
+            # Clear folder history
+            cursor.execute("UPDATE ItemTable SET value = ? WHERE key = 'history.recentlyOpenedPathsList'", 
+                          (json.dumps({"entries": []}),))
+            conn.commit()
+            conn.close()
+            
+            QMessageBox.information(
+                self,
+                "Folder Access Cleared",
+                "✅ All folder access has been cleared!\n\n"
+                "Windsurf will re-request folder access on next use."
+            )
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to clear folder access:\n{str(e)}")
+    
+    def launch_sandbox(self):
+        """Launch Windsurf in sandbox mode"""
+        import subprocess
+        from pathlib import Path
+        
+        script_path = Path(__file__).parent / "sandbox_windsurf.sh"
+        
+        if not script_path.exists():
+            QMessageBox.warning(
+                self,
+                "Script Not Found",
+                f"Sandbox script not found: {script_path}\n\n"
+                "Please ensure sandbox_windsurf.sh exists in the toolkit directory."
+            )
+            return
+        
+        reply = QMessageBox.question(
+            self,
+            "Launch Sandbox",
+            "Launch Windsurf in sandboxed mode?\n\n"
+            "This will:\n"
+            "• Restrict network access\n"
+            "• Limit file system access\n"
+            "• Block tracking\n"
+            "• Force permission re-requests\n\n"
+            "Continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                subprocess.Popen([str(script_path)])
+                QMessageBox.information(
+                    self,
+                    "Sandbox Launched",
+                    "✅ Windsurf is launching in sandbox mode!\n\n"
+                    "Check the terminal for sandbox output."
+                )
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to launch sandbox:\n{str(e)}")
+    
+    def reset_everything(self):
+        """Nuclear option: reset all permissions and tracking"""
+        reply = QMessageBox.warning(
+            self,
+            "Reset Everything",
+            "⚠️ NUCLEAR OPTION ⚠️\n\n"
+            "This will:\n"
+            "• Reset ALL TCC permissions\n"
+            "• Clear ALL folder access\n"
+            "• Remove ALL tracking\n\n"
+            "Windsurf will need to re-request EVERYTHING.\n\n"
+            "Are you absolutely sure?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        
+        # Double confirmation
+        reply2 = QMessageBox.question(
+            self,
+            "Final Confirmation",
+            "This cannot be undone.\n\n"
+            "Proceed with complete reset?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply2 == QMessageBox.StandardButton.Yes:
+            self.reset_tcc_permissions()
+            self.clear_all_folder_access()
+            
+            QMessageBox.information(
+                self,
+                "Complete Reset",
+                "✅ Complete reset finished!\n\n"
+                "Windsurf will re-request all permissions on next launch."
+            )
+
+
 class MainWindow(QMainWindow):
     """Main application window"""
     
@@ -3301,7 +3620,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(PermissionsWidget(), "│ 🔒 Permissions")
         self.tabs.addTab(GlobalAccessWidget(), "🌍 Global Access")
         self.tabs.addTab(FolderAccessWidget(), "📁 Folder Access")
-        self.tabs.addTab(NetworkMonitorWidget(), "│ 🌐 Network Monitor")
+        self.tabs.addTab(SandboxWidget(), "│ 🧪 Sandbox")
+        self.tabs.addTab(NetworkMonitorWidget(), "🌐 Network Monitor")
         
         # Style tabs with better spacing
         self.tabs.setStyleSheet("""
