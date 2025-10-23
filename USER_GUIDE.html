@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windsurf Privacy Toolkit - User Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+        
+        nav {
+            background: #34495e;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        nav a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        section {
+            margin-bottom: 60px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        section h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        section h3 {
+            font-size: 1.8em;
+            margin: 30px 0 15px 0;
+            color: #34495e;
+        }
+        
+        section h4 {
+            font-size: 1.3em;
+            margin: 20px 0 10px 0;
+            color: #667eea;
+        }
+        
+        .feature-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .feature-box h4 {
+            margin-top: 0;
+        }
+        
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        
+        li {
+            margin: 10px 0;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .tip {
+            background: #d1ecf1;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        code {
+            background: #2c3e50;
+            color: #e74c3c;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .button-demo {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+        }
+        
+        .btn-blue { background: #3498db; }
+        .btn-green { background: #27ae60; }
+        .btn-orange { background: #e67e22; }
+        .btn-red { background: #e74c3c; }
+        .btn-purple { background: #9b59b6; }
+        .btn-gray { background: #95a5a6; }
+        
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 2em; }
+            section h2 { font-size: 1.8em; }
+            nav ul { flex-direction: column; }
+            .content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Windsurf Privacy Toolkit</h1>
+            <p>Complete User Guide - Take Control of Your Privacy</p>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="#intro">📖 Introduction</a></li>
+                <li><a href="#dashboard">🏠 Dashboard</a></li>
+                <li><a href="#audit">🔍 Audit</a></li>
+                <li><a href="#cleanup">🧹 Cleanup</a></li>
+                <li><a href="#backups">💾 Backups</a></li>
+                <li><a href="#permissions">🔒 Permissions</a></li>
+                <li><a href="#global-access">🌍 Global Access</a></li>
+                <li><a href="#folder-access">📁 Folder Access</a></li>
+                <li><a href="#sandbox">🧪 Sandbox</a></li>
+                <li><a href="#network">🌐 Network Monitor</a></li>
+            </ul>
+        </nav>
+        
+        <div class="content">
+            <!-- INTRO SECTION -->
+            <section id="intro">
+                <h2>📖 Introduction</h2>
+                
+                <h3>Welcome to the Windsurf Privacy Toolkit!</h3>
+                <p>This comprehensive toolkit gives you complete control over Windsurf's access to your system. Whether you're concerned about privacy, want to understand what your AI coding assistant can access, or need to manage permissions for security testing, this toolkit has you covered.</p>
+                
+                <h3>🎯 What This Toolkit Does</h3>
+                <div class="feature-box">
+                    <h4>✅ Monitor & Control</h4>
+                    <ul>
+                        <li>View all macOS system permissions (Camera, Microphone, Full Disk Access)</li>
+                        <li>See which folders Windsurf has accessed</li>
+                        <li>Track permission changes with timestamps</li>
+                        <li>Analyze security risks</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>🔒 Lock Down Access</h4>
+                    <ul>
+                        <li>Lock Windsurf to Documents folder only</li>
+                        <li>Remove access to specific locations</li>
+                        <li>Clean up stale folder tracking</li>
+                        <li>Export chat history before removing access</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>🧪 Test & Reset</h4>
+                    <ul>
+                        <li>Reset all TCC permissions</li>
+                        <li>Clear folder access tracking</li>
+                        <li>Launch Windsurf in sandbox mode</li>
+                        <li>Force permission re-requests</li>
+                    </ul>
+                </div>
+                
+                <h3>🚀 Getting Started</h3>
+                <ol>
+                    <li><strong>Launch the Toolkit:</strong> Double-click the Desktop app or run <code>python3 windsurf_privacy_gui.py</code></li>
+                    <li><strong>Start with Dashboard:</strong> Get an overview of your current privacy status</li>
+                    <li><strong>Explore Each Tab:</strong> Each tab focuses on a specific aspect of privacy control</li>
+                    <li><strong>Take Action:</strong> Use the buttons to scan, remove, lock, or reset as needed</li>
+                </ol>
+                
+                <div class="tip">
+                    <strong>💡 Pro Tip:</strong> Start by running the Audit tab to get a complete picture of what Windsurf has access to, then use the other tabs to make changes.
+                </div>
+                
+                <h3>⚠️ Important Notes</h3>
+                <div class="warning">
+                    <strong>Before You Begin:</strong>
+                    <ul>
+                        <li>This toolkit modifies Windsurf's databases and system permissions</li>
+                        <li>Always backup important data before making changes</li>
+                        <li>Some operations require sudo/admin access</li>
+                        <li>Windsurf may need to be restarted after changes</li>
+                        <li>Chat exports are saved to <code>_Chatlogs</code> folders (never pushed to git)</li>
+                    </ul>
+                </div>
+                
+                <h3>📋 System Requirements</h3>
+                <ul>
+                    <li><strong>OS:</strong> macOS 10.13 or later</li>
+                    <li><strong>Python:</strong> Python 3.7 or later</li>
+                    <li><strong>Dependencies:</strong> PyQt6 (installed automatically)</li>
+                    <li><strong>Permissions:</strong> Admin access for some features</li>
+                </ul>
+            </section>
+            
+            <!-- DASHBOARD SECTION -->
+            <section id="dashboard">
+                <h2>🏠 Dashboard</h2>
+                
+                <h3>Overview</h3>
+                <p>The Dashboard is your central hub for quick actions and status overview. It provides one-click access to the most common operations.</p>
+                
+                <h3>Quick Actions</h3>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-blue">🔍 Run Full Audit</span></h4>
+                    <p><strong>What it does:</strong> Performs a comprehensive scan of all Windsurf data, permissions, and tracking.</p>
+                    <p><strong>When to use:</strong> First time using the toolkit, or when you want a complete overview.</p>
+                    <p><strong>Output:</strong> Detailed report of findings saved to audit files.</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-green">🧹 Quick Cleanup</span></h4>
+                    <p><strong>What it does:</strong> Removes common tracking data and cleans up stale entries.</p>
+                    <p><strong>When to use:</strong> Regular maintenance, or after closing multiple projects.</p>
+                    <p><strong>What gets cleaned:</strong> Stale folder entries, old cache data, temporary files.</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-orange">💾 Create Backup</span></h4>
+                    <p><strong>What it does:</strong> Creates a timestamped backup of all Windsurf data.</p>
+                    <p><strong>When to use:</strong> Before making major changes, or as regular backup routine.</p>
+                    <p><strong>Backup includes:</strong> Databases, settings, chat history, workspace data.</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-purple">🔒 Check Permissions</span></h4>
+                    <p><strong>What it does:</strong> Scans macOS system permissions for Windsurf.</p>
+                    <p><strong>When to use:</strong> After system updates, or when troubleshooting access issues.</p>
+                    <p><strong>Shows:</strong> Camera, Microphone, Full Disk Access, Automation, etc.</p>
+                </div>
+                
+                <h3>Status Indicators</h3>
+                <p>The Dashboard shows real-time status of:</p>
+                <ul>
+                    <li>✅ <strong>Last Audit:</strong> When you last ran a full audit</li>
+                    <li>💾 <strong>Last Backup:</strong> Most recent backup timestamp</li>
+                    <li>📁 <strong>Folders Tracked:</strong> Number of folders Windsurf is monitoring</li>
+                    <li>🔒 <strong>Permission Status:</strong> Overall security assessment</li>
+                </ul>
+                
+                <div class="tip">
+                    <strong>💡 Best Practice:</strong> Run a full audit weekly and create backups before making any changes.
+                </div>
+            </section>
+            
+            <!-- AUDIT SECTION -->
+            <section id="audit">
+                <h2>🔍 Audit</h2>
+                
+                <h3>Overview</h3>
+                <p>The Audit tab provides comprehensive analysis of Windsurf's data collection, tracking, and system access. Use this to understand exactly what Windsurf knows about your system.</p>
+                
+                <h3>Audit Features</h3>
+                
+                <div class="feature-box">
+                    <h4>📊 Database Analysis</h4>
+                    <p><strong>What it scans:</strong></p>
+                    <ul>
+                        <li><code>state.vscdb</code> - Workspace state and history</li>
+                        <li><code>globalStorage/state.vscdb</code> - Global settings and folder tracking</li>
+                        <li><code>storage.json</code> - Workspace-specific data</li>
+                        <li>Chat history databases</li>
+                    </ul>
+                    <p><strong>What you'll learn:</strong> Which folders are tracked, what data is stored, chat history locations.</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>🔍 File System Scan</h4>
+                    <p><strong>Scans for:</strong></p>
+                    <ul>
+                        <li>Windsurf application files</li>
+                        <li>User data directories</li>
+                        <li>Cache and temporary files</li>
+                        <li>Log files and crash reports</li>
+                    </ul>
+                    <p><strong>Shows:</strong> File sizes, modification dates, and locations.</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>🌐 Network Activity</h4>
+                    <p><strong>Analyzes:</strong></p>
+                    <ul>
+                        <li>Recent network connections</li>
+                        <li>API endpoints contacted</li>
+                        <li>Data transmission patterns</li>
+                        <li>External service usage</li>
+                    </ul>
+                    <p><strong>Helps identify:</strong> What data might be sent externally.</p>
+                </div>
+                
+                <h3>Running an Audit</h3>
+                <ol>
+                    <li>Click <span class="button-demo btn-blue">🔍 Start Audit</span></li>
+                    <li>Wait for scan to complete (usually 10-30 seconds)</li>
+                    <li>Review findings in the results table</li>
+                    <li>Export report if needed</li>
+                </ol>
+                
+                <h3>Understanding Results</h3>
+                
+                <h4>Risk Levels:</h4>
+                <ul>
+                    <li>🟢 <strong>Low:</strong> Normal operation, no concerns</li>
+                    <li>🟡 <strong>Medium:</strong> Some tracking detected, review recommended</li>
+                    <li>🟠 <strong>High:</strong> Significant tracking or sensitive data access</li>
+                    <li>🔴 <strong>Critical:</strong> Full system access or extensive tracking</li>
+                </ul>
+                
+                <div class="warning">
+                    <strong>⚠️ High/Critical Findings:</strong> If you see high or critical risk levels, review the specific findings and consider using the Cleanup or Sandbox tabs to restrict access.
+                </div>
+                
+                <h3>Exporting Audit Reports</h3>
+                <p>Click <span class="button-demo btn-gray">📄 Export Report</span> to save findings as:</p>
+                <ul>
+                    <li><strong>JSON:</strong> Machine-readable format for analysis</li>
+                    <li><strong>CSV:</strong> Spreadsheet format for tracking over time</li>
+                    <li><strong>TXT:</strong> Human-readable summary</li>
+                </ul>
+                
+                <div class="tip">
+                    <strong>💡 Pro Tip:</strong> Run audits before and after making changes to compare the impact. Export reports to track changes over time.
+                </div>
+            </section>
+            
+            <!-- CLEANUP SECTION -->
+            <section id="cleanup">
+                <h2>🧹 Cleanup</h2>
+                
+                <h3>Overview</h3>
+                <p>The Cleanup tab helps you remove tracking data, clear caches, and clean up stale entries. Use this for regular maintenance or when you want to reduce Windsurf's footprint.</p>
+                
+                <h3>Cleanup Options</h3>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-orange">🗑️ Clear Workspace History</span></h4>
+                    <p><strong>What it removes:</strong></p>
+                    <ul>
+                        <li>Recently opened workspaces list</li>
+                        <li>Workspace state and history</li>
+                        <li>File access history</li>
+                    </ul>
+                    <p><strong>Effect:</strong> Windsurf won't remember which folders you've opened.</p>
+                    <p><strong>Safe to use:</strong> Yes, doesn't affect your actual files or settings.</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-orange">🧹 Clear Cache</span></h4>
+                    <p><strong>What it removes:</strong></p>
+                    <ul>
+                        <li>Temporary files</li>
+                        <li>Downloaded extensions cache</li>
+                        <li>Code analysis cache</li>
+                        <li>Thumbnail cache</li>
+                    </ul>
+                    <p><strong>Effect:</strong> Frees up disk space, may slow down first launch after cleanup.</p>
+                    <p><strong>Disk space saved:</strong> Usually 100MB - 1GB</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-red">🔥 Deep Clean</span></h4>
+                    <p><strong>What it removes:</strong></p>
+                    <ul>
+                        <li>All workspace history</li>
+                        <li>All cache files</li>
+                        <li>Log files</li>
+                        <li>Crash reports</li>
+                        <li>Temporary databases</li>
+                    </ul>
+                    <p><strong>Effect:</strong> Maximum privacy, Windsurf starts fresh.</p>
+                    <div class="warning">
+                        <strong>⚠️ Warning:</strong> This is a thorough cleanup. Windsurf will need to rebuild caches and won't remember any previous workspaces.
+                    </div>
+                </div>
+                
+                <h3>Selective Cleanup</h3>
+                <p>You can also clean specific items:</p>
+                <ul>
+                    <li><strong>Chat History:</strong> Remove AI conversation logs</li>
+                    <li><strong>Extension Data:</strong> Clear extension caches and data</li>
+                    <li><strong>Search History:</strong> Remove search and command history</li>
+                    <li><strong>Recent Files:</strong> Clear recently opened files list</li>
+                </ul>
+                
+                <h3>Best Practices</h3>
+                <div class="tip">
+                    <strong>💡 Recommended Schedule:</strong>
+                    <ul>
+                        <li><strong>Weekly:</strong> Clear cache</li>
+                        <li><strong>Monthly:</strong> Clear workspace history</li>
+                        <li><strong>Before important work:</strong> Deep clean</li>
+                        <li><strong>After major projects:</strong> Clear chat history</li>
+                    </ul>
+                </div>
+                
+                <div class="success">
+                    <strong>✅ Safe Cleanup:</strong> All cleanup operations preserve your actual code files and Windsurf settings. Only tracking data and caches are removed.
+                </div>
+            </section>
+            
+            <!-- BACKUPS SECTION -->
+            <section id="backups">
+                <h2>💾 Backups</h2>
+                
+                <h3>Overview</h3>
+                <p>The Backups tab helps you create and manage backups of Windsurf data. Always backup before making major changes!</p>
+                
+                <h3>Creating Backups</h3>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-green">💾 Create Full Backup</span></h4>
+                    <p><strong>What gets backed up:</strong></p>
+                    <ul>
+                        <li>All databases (<code>state.vscdb</code>, <code>globalStorage</code>)</li>
+                        <li>Workspace storage files</li>
+                        <li>Chat history</li>
+                        <li>Settings and preferences</li>
+                        <li>Extension data</li>
+                    </ul>
+                    <p><strong>Backup location:</strong> <code>~/WindsurfBackups/backup_YYYY-MM-DD_HH-MM-SS/</code></p>
+                    <p><strong>Time required:</strong> 10-30 seconds depending on data size</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-blue">📦 Quick Backup</span></h4>
+                    <p><strong>What gets backed up:</strong></p>
+                    <ul>
+                        <li>Essential databases only</li>
+                        <li>Current workspace state</li>
+                        <li>Recent chat history</li>
+                    </ul>
+                    <p><strong>When to use:</strong> Quick backup before small changes</p>
+                    <p><strong>Time required:</strong> 5-10 seconds</p>
+                </div>
+                
+                <h3>Managing Backups</h3>
+                
+                <div class="feature-box">
+                    <h4>📋 View Backups</h4>
+                    <p>The backups table shows:</p>
+                    <ul>
+                        <li><strong>Timestamp:</strong> When backup was created</li>
+                        <li><strong>Size:</strong> Total backup size</li>
+                        <li><strong>Type:</strong> Full or Quick backup</li>
+                        <li><strong>Status:</strong> Valid or corrupted</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-green">♻️ Restore Backup</span></h4>
+                    <p><strong>How to restore:</strong></p>
+                    <ol>
+                        <li>Select a backup from the list</li>
+                        <li>Click "Restore Backup"</li>
+                        <li>Confirm restoration</li>
+                        <li>Windsurf will be restored to that state</li>
+                    </ol>
+                    <div class="warning">
+                        <strong>⚠️ Important:</strong> Restoring will overwrite current Windsurf data. Create a backup of current state first!
+                    </div>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-red">🗑️ Delete Old Backups</span></h4>
+                    <p><strong>Cleanup options:</strong></p>
+                    <ul>
+                        <li><strong>Delete Selected:</strong> Remove specific backups</li>
+                        <li><strong>Delete Older Than:</strong> Remove backups older than X days</li>
+                        <li><strong>Keep Last N:</strong> Keep only the N most recent backups</li>
+                    </ul>
+                    <p><strong>Recommended:</strong> Keep last 5 backups, delete older than 30 days</p>
+                </div>
+                
+                <h3>Backup Best Practices</h3>
+                <div class="tip">
+                    <strong>💡 When to Backup:</strong>
+                    <ul>
+                        <li><strong>Before cleanup:</strong> Always backup before deep clean</li>
+                        <li><strong>Before permission changes:</strong> Backup before resetting TCC</li>
+                        <li><strong>After important work:</strong> Backup chat history after major coding sessions</li>
+                        <li><strong>Regular schedule:</strong> Weekly full backups</li>
+                        <li><strong>Before updates:</strong> Backup before Windsurf updates</li>
+                    </ul>
+                </div>
+                
+                <h3>Backup Storage</h3>
+                <p><strong>Default location:</strong> <code>~/WindsurfBackups/</code></p>
+                <p><strong>Typical sizes:</strong></p>
+                <ul>
+                    <li>Quick backup: 10-50 MB</li>
+                    <li>Full backup: 50-200 MB</li>
+                    <li>With chat history: 100-500 MB</li>
+                </ul>
+                
+                <div class="success">
+                    <strong>✅ Auto-Backup:</strong> The toolkit can automatically create backups before destructive operations. Enable this in settings!
+                </div>
+            </section>
+            
+            <!-- PERMISSIONS SECTION -->
+            <section id="permissions">
+                <h2>🔒 Permissions</h2>
+                
+                <h3>Overview</h3>
+                <p>The Permissions tab shows all macOS system permissions that Windsurf has requested or been granted. This helps you understand what system resources Windsurf can access.</p>
+                
+                <h3>Permission Types</h3>
+                
+                <div class="feature-box">
+                    <h4>📷 Camera & Microphone</h4>
+                    <p><strong>What it allows:</strong> Access to camera and microphone hardware</p>
+                    <p><strong>Why Windsurf needs it:</strong> For video calls, screen sharing, or audio input features</p>
+                    <p><strong>Privacy impact:</strong> High - can record audio/video</p>
+                    <p><strong>Recommendation:</strong> Only grant if you use these features</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>💾 Full Disk Access</h4>
+                    <p><strong>What it allows:</strong> Read/write access to all files on your system</p>
+                    <p><strong>Why Windsurf needs it:</strong> To access files in protected locations</p>
+                    <p><strong>Privacy impact:</strong> Critical - can access everything</p>
+                    <div class="warning">
+                        <strong>⚠️ High Risk:</strong> Full Disk Access gives complete file system access. Only grant if absolutely necessary.
+                    </div>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>🤖 Automation & AppleScript</h4>
+                    <p><strong>What it allows:</strong> Control other applications via AppleScript</p>
+                    <p><strong>Why Windsurf needs it:</strong> To integrate with other development tools</p>
+                    <p><strong>Privacy impact:</strong> Medium - can control other apps</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>📁 Folder Access</h4>
+                    <p><strong>What it allows:</strong> Access to specific folders (Desktop, Documents, Downloads)</p>
+                    <p><strong>Why Windsurf needs it:</strong> To open and edit files in these locations</p>
+                    <p><strong>Privacy impact:</strong> Medium - limited to specific folders</p>
+                </div>
+                
+                <h3>Checking Permissions</h3>
+                <ol>
+                    <li>Click <span class="button-demo btn-blue">🔍 Scan Permissions</span></li>
+                    <li>Review the permissions table</li>
+                    <li>Check status: ✅ Granted, ❌ Denied, ⚠️ Not Requested</li>
+                </ol>
+                
+                <h3>Permission Status Meanings</h3>
+                <ul>
+                    <li>✅ <strong>Granted:</strong> Windsurf has this permission</li>
+                    <li>❌ <strong>Denied:</strong> You've explicitly denied this permission</li>
+                    <li>⚠️ <strong>Not Requested:</strong> Windsurf hasn't asked for this yet</li>
+                    <li>🔄 <strong>Pending:</strong> Permission request is waiting for your response</li>
+                </ul>
+                
+                <h3>Managing Permissions</h3>
+                <p>To change permissions:</p>
+                <ol>
+                    <li>Open <strong>System Settings</strong> → <strong>Privacy & Security</strong></li>
+                    <li>Select the permission type (e.g., "Full Disk Access")</li>
+                    <li>Find "Windsurf" in the list</li>
+                    <li>Toggle on/off as needed</li>
+                    <li>Restart Windsurf for changes to take effect</li>
+                </ol>
+                
+                <div class="tip">
+                    <strong>💡 Minimal Permissions:</strong> For best privacy, only grant permissions you actually need. Most users don't need Camera, Microphone, or Full Disk Access.
+                </div>
+            </section>
+            
+            <!-- GLOBAL ACCESS SECTION -->
+            <section id="global-access">
+                <h2>🌍 Global Access</h2>
+                
+                <h3>Overview</h3>
+                <p>The Global Access tab shows which system folders Windsurf has accessed, grouped by location. This helps identify if sensitive areas like Desktop, Downloads, or Library are exposed.</p>
+                
+                <h3>Scanning Global Access</h3>
+                <ol>
+                    <li>Click <span class="button-demo btn-blue">🔍 Scan Global Access</span></li>
+                    <li>View the results table showing locations and folder counts</li>
+                    <li>Check the security assessment</li>
+                </ol>
+                
+                <h3>Security Assessments</h3>
+                <ul>
+                    <li>✅ <strong>EXCELLENT:</strong> Only Documents folder accessed</li>
+                    <li>✅ <strong>GOOD:</strong> No sensitive folders accessed</li>
+                    <li>⚠️ <strong>MODERATE RISK:</strong> Desktop or Downloads accessed</li>
+                    <li>🔴 <strong>HIGH RISK:</strong> Library or system folders accessed</li>
+                </ul>
+                
+                <h3>Understanding the Table</h3>
+                <div class="feature-box">
+                    <h4>Table Columns</h4>
+                    <ul>
+                        <li><strong>Location:</strong> Top-level folder (e.g., 📄 Documents, 🖥️ Desktop)</li>
+                        <li><strong>Folder Count:</strong> Number of subfolders accessed in this location</li>
+                        <li><strong>Examples:</strong> Sample folders (click to expand and see all)</li>
+                        <li><strong>Status:</strong> Risk level indicator</li>
+                    </ul>
+                </div>
+                
+                <h3>Key Features</h3>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-green">🔒 Lock to Documents Only</span></h4>
+                    <p><strong>What it does:</strong> Removes all folder tracking except Documents</p>
+                    <p><strong>When to use:</strong> When you want maximum privacy and only work in Documents</p>
+                    <p><strong>Effect:</strong> Windsurf will only remember Documents folders</p>
+                    <div class="success">
+                        <strong>✅ Recommended:</strong> This is the safest configuration for most users!
+                    </div>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-red">🗑️ Remove All Access to Selected Location</span></h4>
+                    <p><strong>What it does:</strong> Removes tracking for a specific location (e.g., Desktop)</p>
+                    <p><strong>How to use:</strong></p>
+                    <ol>
+                        <li>Select a location in the table</li>
+                        <li>Click "Remove All Access to Selected Location"</li>
+                        <li>Confirm removal</li>
+                    </ol>
+                    <p><strong>Effect:</strong> Windsurf won't remember folders from that location</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-gray">📋 View Change Log</span></h4>
+                    <p><strong>What it shows:</strong> Timestamped log of all access changes</p>
+                    <p><strong>Includes:</strong></p>
+                    <ul>
+                        <li>When changes were made</li>
+                        <li>What locations were affected</li>
+                        <li>How many folders were removed</li>
+                        <li>What action was taken (lock, remove, etc.)</li>
+                    </ul>
+                </div>
+                
+                <h3>Expandable Folder Lists</h3>
+                <p>Click on the "Examples" column to:</p>
+                <ul>
+                    <li>🔽 <strong>Expand:</strong> See all folders for that location</li>
+                    <li>🔼 <strong>Collapse:</strong> Return to summary view</li>
+                </ul>
+                
+                <div class="tip">
+                    <strong>💡 Best Practice:</strong> Regularly check Global Access and use "Lock to Documents Only" if you don't need access to other locations.
+                </div>
+            </section>
+            
+            <!-- FOLDER ACCESS SECTION -->
+            <section id="folder-access">
+                <h2>📁 Folder Access</h2>
+                
+                <h3>Overview</h3>
+                <p>The Folder Access tab shows every individual folder that Windsurf is tracking. Use this for granular control over workspace access.</p>
+                
+                <h3>Scanning Folder Access</h3>
+                <ol>
+                    <li>Click <span class="button-demo btn-blue">🔍 Scan Folder Access</span></li>
+                    <li>View the complete list of tracked folders</li>
+                    <li>Sort by clicking column headers</li>
+                </ol>
+                
+                <h3>Understanding the Table</h3>
+                <div class="feature-box">
+                    <h4>Table Columns</h4>
+                    <ul>
+                        <li><strong>Folder Path:</strong> Full path to the folder</li>
+                        <li><strong>Last Accessed:</strong> When Windsurf last opened this folder</li>
+                        <li><strong>File Count:</strong> Number of files in the folder</li>
+                        <li><strong>Status:</strong> Current access status</li>
+                    </ul>
+                </div>
+                
+                <h3>Status Indicators</h3>
+                <ul>
+                    <li>✅ <strong>Read/Write:</strong> Folder exists and is accessible</li>
+                    <li>❌ <strong>Not Found:</strong> Folder has been deleted or moved</li>
+                    <li>🔒 <strong>No Access:</strong> Permission denied</li>
+                    <li>⚠️ <strong>Stale:</strong> Not accessed in over 30 days</li>
+                </ul>
+                
+                <h3>Key Features</h3>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-red">🗑️ Remove Access to Selected Folder</span></h4>
+                    <p><strong>What it does:</strong></p>
+                    <ol>
+                        <li>Exports chat history to <code>_Chatlogs</code> folder</li>
+                        <li>Removes folder from Windsurf tracking</li>
+                        <li>Deletes workspace storage database</li>
+                    </ol>
+                    <p><strong>Chat export includes:</strong></p>
+                    <ul>
+                        <li><strong>Markdown:</strong> Human-readable format</li>
+                        <li><strong>JSON:</strong> Complete data with metadata</li>
+                        <li><strong>CSV:</strong> Spreadsheet format</li>
+                    </ul>
+                    <div class="success">
+                        <strong>✅ Safe:</strong> Your actual code files are never deleted, only tracking data!
+                    </div>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-orange">🧹 Remove All 'Not Found' Folders</span></h4>
+                    <p><strong>What it does:</strong> Cleans up all folders marked as "Not Found"</p>
+                    <p><strong>When to use:</strong> After deleting projects or reorganizing files</p>
+                    <p><strong>Effect:</strong> Removes stale tracking entries</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-blue">💬 Export Current Chats</span></h4>
+                    <p><strong>What it does:</strong> Exports chat history for current workspace</p>
+                    <p><strong>Save location:</strong> <code>_Chatlogs</code> folder in workspace</p>
+                    <p><strong>Formats:</strong> Markdown, JSON, CSV</p>
+                    <p><strong>When to use:</strong> Before removing access or as backup</p>
+                </div>
+                
+                <h3>Sorting and Filtering</h3>
+                <ul>
+                    <li>Click column headers to sort</li>
+                    <li>Click again to reverse sort order</li>
+                    <li>Use alternating row colors for easier reading</li>
+                </ul>
+                
+                <div class="tip">
+                    <strong>💡 Maintenance Tip:</strong> Run "Remove All 'Not Found' Folders" monthly to keep your tracking list clean.
+                </div>
+            </section>
+            
+            <!-- SANDBOX SECTION -->
+            <section id="sandbox">
+                <h2>🧪 Sandbox</h2>
+                
+                <h3>Overview</h3>
+                <p>The Sandbox tab provides powerful tools to reset permissions and isolate Windsurf. Perfect for testing, debugging, or starting fresh with permissions.</p>
+                
+                <h3>Reset Options</h3>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-orange">🔄 Reset TCC Permissions</span></h4>
+                    <p><strong>What it does:</strong> Resets ALL macOS privacy permissions for Windsurf</p>
+                    <p><strong>Permissions reset:</strong></p>
+                    <ul>
+                        <li>Camera access</li>
+                        <li>Microphone access</li>
+                        <li>Full Disk Access</li>
+                        <li>Automation permissions</li>
+                        <li>All other TCC permissions</li>
+                    </ul>
+                    <p><strong>Effect:</strong> Windsurf will re-request all permissions on next launch</p>
+                    <div class="warning">
+                        <strong>⚠️ Requires sudo:</strong> You'll be prompted for your admin password
+                    </div>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-red">📁 Clear All Folder Access</span></h4>
+                    <p><strong>What it does:</strong> Removes ALL folder tracking from Windsurf</p>
+                    <p><strong>What gets cleared:</strong></p>
+                    <ul>
+                        <li>Recently opened workspaces</li>
+                        <li>Folder access history</li>
+                        <li>Workspace tracking</li>
+                    </ul>
+                    <p><strong>Effect:</strong> Windsurf will re-request folder access when you open projects</p>
+                    <p><strong>Safe:</strong> Your actual files are not affected</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-blue">🧪 Launch Windsurf in Sandbox</span></h4>
+                    <p><strong>What it does:</strong> Launches Windsurf in a restricted sandbox environment</p>
+                    <p><strong>Sandbox restrictions:</strong></p>
+                    <ul>
+                        <li>🚫 Network access blocked</li>
+                        <li>🚫 File system access limited</li>
+                        <li>🚫 Tracking prevented</li>
+                        <li>✅ Forces permission re-requests</li>
+                    </ul>
+                    <p><strong>When to use:</strong></p>
+                    <ul>
+                        <li>Testing permission flows</li>
+                        <li>Debugging access issues</li>
+                        <li>Security testing</li>
+                        <li>Offline development</li>
+                    </ul>
+                    <p><strong>Note:</strong> Requires <code>sandbox_windsurf.sh</code> script</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-red">🔥 Reset Everything (Nuclear Option)</span></h4>
+                    <p><strong>What it does:</strong> Complete reset of ALL permissions and tracking</p>
+                    <p><strong>Combines:</strong></p>
+                    <ul>
+                        <li>Reset TCC permissions</li>
+                        <li>Clear all folder access</li>
+                        <li>Remove all tracking</li>
+                    </ul>
+                    <div class="warning">
+                        <strong>⚠️ WARNING:</strong> This is the nuclear option! Windsurf will need to re-request EVERYTHING. Double confirmation required.
+                    </div>
+                    <p><strong>When to use:</strong></p>
+                    <ul>
+                        <li>Starting completely fresh</li>
+                        <li>After major security concerns</li>
+                        <li>Before selling/transferring Mac</li>
+                        <li>Testing from scratch</li>
+                    </ul>
+                </div>
+                
+                <h3>Use Cases</h3>
+                
+                <h4>🔬 Testing Permission Flows</h4>
+                <p>Reset TCC permissions to see how Windsurf requests them and what it asks for.</p>
+                
+                <h4>🐛 Debugging Access Issues</h4>
+                <p>If Windsurf can't access files, reset folder access to force re-request.</p>
+                
+                <h4>🔒 Maximum Privacy</h4>
+                <p>Use "Reset Everything" to ensure no tracking or permissions remain.</p>
+                
+                <h4>🧪 Isolated Testing</h4>
+                <p>Launch in sandbox mode to test features without network or file access.</p>
+                
+                <div class="tip">
+                    <strong>💡 Pro Tip:</strong> Always create a backup before using sandbox features, especially "Reset Everything"!
+                </div>
+            </section>
+            
+            <!-- NETWORK MONITOR SECTION -->
+            <section id="network">
+                <h2>🌐 Network Monitor</h2>
+                
+                <h3>Overview</h3>
+                <p>The Network Monitor tab tracks Windsurf's network activity, showing what external services it connects to and what data might be transmitted.</p>
+                
+                <h3>Starting Network Monitoring</h3>
+                <ol>
+                    <li>Click <span class="button-demo btn-green">▶️ Start Monitoring</span></li>
+                    <li>Windsurf's network activity will be captured</li>
+                    <li>Use Windsurf normally</li>
+                    <li>Click <span class="button-demo btn-red">⏹️ Stop Monitoring</span> when done</li>
+                    <li>Review captured connections</li>
+                </ol>
+                
+                <h3>What Gets Monitored</h3>
+                <div class="feature-box">
+                    <h4>Connection Data</h4>
+                    <ul>
+                        <li><strong>Destination:</strong> IP address or domain</li>
+                        <li><strong>Port:</strong> Network port used</li>
+                        <li><strong>Protocol:</strong> HTTP, HTTPS, WebSocket, etc.</li>
+                        <li><strong>Data Size:</strong> Bytes sent/received</li>
+                        <li><strong>Timestamp:</strong> When connection occurred</li>
+                    </ul>
+                </div>
+                
+                <h3>Understanding Results</h3>
+                
+                <h4>Common Connections:</h4>
+                <ul>
+                    <li><strong>codeium.com:</strong> AI service API</li>
+                    <li><strong>vscode-cdn:</strong> Extension downloads</li>
+                    <li><strong>github.com:</strong> Git operations</li>
+                    <li><strong>npmjs.org:</strong> Package downloads</li>
+                </ul>
+                
+                <h4>Suspicious Connections:</h4>
+                <ul>
+                    <li>🔴 <strong>Unknown domains:</strong> Not recognized services</li>
+                    <li>🔴 <strong>Large data transfers:</strong> Unexpected data uploads</li>
+                    <li>🔴 <strong>Frequent connections:</strong> Constant phone-home behavior</li>
+                </ul>
+                
+                <h3>Features</h3>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-blue">📊 View Statistics</span></h4>
+                    <p><strong>Shows:</strong></p>
+                    <ul>
+                        <li>Total connections</li>
+                        <li>Data sent/received</li>
+                        <li>Most contacted domains</li>
+                        <li>Connection timeline</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-gray">💾 Export Capture</span></h4>
+                    <p><strong>Export formats:</strong></p>
+                    <ul>
+                        <li><strong>PCAP:</strong> Packet capture for Wireshark</li>
+                        <li><strong>JSON:</strong> Connection data</li>
+                        <li><strong>CSV:</strong> Spreadsheet format</li>
+                    </ul>
+                    <p><strong>Use for:</strong> Detailed analysis, sharing with security researchers</p>
+                </div>
+                
+                <div class="feature-box">
+                    <h4><span class="button-demo btn-orange">🚫 Block Domain</span></h4>
+                    <p><strong>What it does:</strong> Adds domain to system firewall block list</p>
+                    <p><strong>Effect:</strong> Windsurf can't connect to that domain</p>
+                    <p><strong>When to use:</strong> Block telemetry or tracking domains</p>
+                    <div class="warning">
+                        <strong>⚠️ Caution:</strong> Blocking essential domains may break Windsurf functionality!
+                    </div>
+                </div>
+                
+                <h3>Privacy Tips</h3>
+                <div class="tip">
+                    <strong>💡 What to Look For:</strong>
+                    <ul>
+                        <li><strong>Telemetry:</strong> Connections to analytics services</li>
+                        <li><strong>Tracking:</strong> Frequent connections with user data</li>
+                        <li><strong>Data uploads:</strong> Large outbound transfers</li>
+                        <li><strong>Third parties:</strong> Connections to unexpected services</li>
+                    </ul>
+                </div>
+                
+                <h3>Best Practices</h3>
+                <ul>
+                    <li><strong>Monitor regularly:</strong> Run captures weekly</li>
+                    <li><strong>Compare captures:</strong> Look for changes over time</li>
+                    <li><strong>Export for analysis:</strong> Use Wireshark for deep inspection</li>
+                    <li><strong>Block selectively:</strong> Only block confirmed tracking domains</li>
+                </ul>
+                
+                <div class="success">
+                    <strong>✅ Transparency:</strong> Network monitoring gives you complete visibility into what Windsurf sends and receives!
+                </div>
+            </section>
+        </div>
+        
+        <footer>
+            <h3>🛡️ Windsurf Privacy Toolkit</h3>
+            <p>Open-source privacy control for Windsurf AI coding assistant</p>
+            <p>
+                <a href="https://github.com/aimarketingflow/windsurf-privacy-enforcer-historical-access-clear" target="_blank">GitHub Repository</a> | 
+                <a href="https://github.com/aimarketingflow/windsurf-privacy-enforcer-historical-access-clear/issues" target="_blank">Report Issues</a> | 
+                <a href="https://github.com/aimarketingflow/windsurf-privacy-enforcer-historical-access-clear/blob/main/LICENSE" target="_blank">License</a>
+            </p>
+            <p style="margin-top: 20px; opacity: 0.8;">
+                Built with ❤️ for privacy-conscious developers<br>
+                No data collection • Runs locally • Open source • Security-first
+            </p>
+            <p style="margin-top: 20px; font-size: 0.9em;">
+                © 2025 Windsurf Privacy Toolkit • All rights reserved
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
