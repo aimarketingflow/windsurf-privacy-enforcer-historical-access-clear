@@ -218,7 +218,8 @@ read -p "Are you sure you want to continue? (yes/no): " CONFIRM
 
 if [ "$CONFIRM" != "yes" ]; then
     echo -e "${YELLOW}Cancelled. No changes made.${NC}"
-    exit 0
+    echo ""
+    exit 1
 fi
 
 echo ""

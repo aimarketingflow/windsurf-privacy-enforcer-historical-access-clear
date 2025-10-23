@@ -1,10 +1,10 @@
 #!/bin/bash
-# Launcher for Windsurf Privacy Toolkit GUI v2.0
+# Launcher for Windsurf Privacy Toolkit GUI v2.1
 
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 APP_DIR="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
 
-# Launch the GUI
+# Launch the GUI (foreground to keep app alive)
 cd "$APP_DIR"
-python3 windsurf_privacy_gui.py &
+exec python3 windsurf_privacy_gui.py

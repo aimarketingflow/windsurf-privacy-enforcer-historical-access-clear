@@ -53,6 +53,8 @@ class WorkerThread(QThread):
             
             if self.process.returncode == 0:
                 self.finished_signal.emit(True, "Operation completed successfully!")
+            elif self.process.returncode == 1:
+                self.finished_signal.emit(False, "Operation cancelled by user")
             else:
                 self.finished_signal.emit(False, f"Operation failed with code {self.process.returncode}")
                 
@@ -730,6 +732,29 @@ class CleanupWidget(QWidget):
         preserve_group.setLayout(preserve_layout)
         layout.addWidget(preserve_group)
         
+        # MachineID prevention option
+        machineid_group = QGroupBox("MachineID Regeneration Prevention")
+        machineid_layout = QVBoxLayout()
+
+        self.prevent_machineid = QCheckBox("Prevent MachineID regeneration after cleanup")
+        self.prevent_machineid.setChecked(True)  # Default to preventing
+        machineid_layout.addWidget(self.prevent_machineid)
+
+        machineid_desc = QLabel(
+            "   This will protect:\n"
+            "   • Makes storage.json read-only\n"
+            "   • Prevents Windsurf from recreating tracking IDs\n"
+            "   • Maintains privacy after cleanup\n"
+            "   • Can be reversed if needed\n\n"
+            "   ✅ Recommended: Keep checked for maximum privacy"
+        )
+        machineid_desc.setStyleSheet("color: #e74c3c; font-size: 11px; margin-left: 20px;")
+        machineid_desc.setWordWrap(True)
+        machineid_layout.addWidget(machineid_desc)
+
+        machineid_group.setLayout(machineid_layout)
+        layout.addWidget(machineid_group)
+        
         # Warning
         warning = QLabel(
             "⚠️  <b>WARNING: This will COMPLETELY clear ALL workspace history!</b><br><br>"
@@ -816,6 +841,9 @@ class CleanupWidget(QWidget):
         preserve_venv = self.preserve_venv.isChecked()
         preserve_text = "y" if preserve_venv else "n"
         
+        # Get MachineID prevention option
+        prevent_machineid = self.prevent_machineid.isChecked()
+        
         # Confirmation dialog
         msg = QMessageBox(self)
         msg.setIcon(QMessageBox.Icon.Warning)
@@ -839,7 +867,8 @@ class CleanupWidget(QWidget):
         
         msg.setInformativeText(
             f"<b>Backup Option:</b> {backup_text}<br>"
-            f"<b>Preserve Python Environments:</b> {'Yes' if preserve_venv else 'No'}<br><br>"
+            f"<b>Preserve Python Environments:</b> {'Yes' if preserve_venv else 'No'}<br>"
+            f"<b>Prevent MachineID Regeneration:</b> {'Yes' if prevent_machineid else 'No'}<br><br>"
             "<b>What will be DELETED:</b><br>"
             "• Machine/Device tracking IDs<br>"
             "• ALL workspace associations (16+ directories)<br>"
@@ -867,10 +896,12 @@ class CleanupWidget(QWidget):
         self.output.append("Starting enhanced cleanup...\n")
         self.output.append(f"Backup option: {backup_option} ({backup_text})\n")
         self.output.append(f"Preserve Python environments: {'Yes' if preserve_venv else 'No'}\n")
+        self.output.append(f"Prevent MachineID regeneration: {'Yes' if prevent_machineid else 'No'}\n")
         self.output.append("Creating wrapper script to handle interactive prompts...\n")
         
         # Create a wrapper script that auto-answers the prompts
         wrapper_script = Path(__file__).parent / "cleanup_wrapper_gui.sh"
+        prevent_script = Path(__file__).parent / "prevent_machineid_regeneration.sh"
         wrapper_content = f"""#!/bin/bash
 # Auto-generated wrapper for GUI cleanup
 # Automatically answers prompts for non-interactive execution
@@ -880,6 +911,13 @@ echo "y
 {preserve_text}
 {backup_option}
 yes" | "{script_path}"
+
+# Run MachineID prevention if requested
+if [ "{'true' if prevent_machineid else 'false'}" = "true" ]; then
+    echo ""
+    echo "Running MachineID prevention..."
+    "{prevent_script}"
+fi
 """
         
         try:
