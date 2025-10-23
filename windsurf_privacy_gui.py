@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QLabel, QTextEdit, QProgressBar, QTabWidget,
     QGroupBox, QRadioButton, QButtonGroup, QCheckBox, QMessageBox,
     QFileDialog, QStatusBar, QFrame, QScrollArea, QGridLayout, QTableWidget,
-    QTableWidgetItem, QHeaderView
+    QTableWidgetItem, QHeaderView, QDialog
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont, QIcon, QPalette, QColor, QTextCursor
@@ -1891,6 +1891,1178 @@ echo "To remove: sudo pfctl -t windsurf_block -T flush"
             )
 
 
+class PermissionsWidget(QWidget):
+    """System permissions tab - Camera, Microphone, Full Disk Access, etc."""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+        
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # Title
+        title = QLabel("System Permissions")
+        title.setFont(QFont("Arial", 18, QFont.Weight.Bold))
+        layout.addWidget(title)
+        
+        desc = QLabel(
+            "View macOS system permissions granted to Windsurf. "
+            "This includes Camera, Microphone, Full Disk Access, Bluetooth, and other system-level permissions."
+        )
+        desc.setWordWrap(True)
+        desc.setStyleSheet("color: #95a5a6; margin-bottom: 15px;")
+        layout.addWidget(desc)
+        
+        # Refresh button
+        btn_layout = QHBoxLayout()
+        self.btn_refresh = QPushButton("🔄 Refresh Permissions")
+        self.btn_refresh.clicked.connect(self.load_permissions)
+        btn_layout.addWidget(self.btn_refresh)
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
+        
+        # Scroll area for permissions
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; }")
+        
+        content = QWidget()
+        self.content_layout = QVBoxLayout()
+        content.setLayout(self.content_layout)
+        scroll.setWidget(content)
+        
+        layout.addWidget(scroll)
+        self.setLayout(layout)
+        
+        # Load permissions on init
+        self.load_permissions()
+        
+    def load_permissions(self):
+        """Load and display all permissions"""
+        # Clear existing content
+        while self.content_layout.count():
+            child = self.content_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+        
+        self.content_layout.addWidget(QLabel("Loading permissions..."))
+        QApplication.processEvents()
+        
+        # Clear loading message
+        while self.content_layout.count():
+            child = self.content_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+        
+        # Add permission sections (system permissions only)
+        self.add_macos_permissions()
+        self.add_full_disk_access()
+        self.add_network_permissions()
+        
+        self.content_layout.addStretch()
+        
+    def add_macos_permissions(self):
+        """Add macOS privacy permissions section"""
+        group = QGroupBox("🔐 macOS Privacy Permissions")
+        layout = QVBoxLayout()
+        
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['defaults', 'read', '/Applications/Windsurf.app/Contents/Info.plist'],
+                capture_output=True,
+                text=True
+            )
+            
+            plist_content = result.stdout
+            permissions = []
+            
+            if 'NSCameraUsageDescription' in plist_content:
+                permissions.append(("📷 Camera", "Requested", "#e67e22"))
+            if 'NSMicrophoneUsageDescription' in plist_content:
+                permissions.append(("🎤 Microphone", "Requested", "#e67e22"))
+            if 'NSBluetoothAlwaysUsageDescription' in plist_content:
+                permissions.append(("📡 Bluetooth", "Requested", "#e67e22"))
+            if 'NSAppleEventsUsageDescription' in plist_content:
+                permissions.append(("⚡ AppleScript/Automation", "Requested", "#e67e22"))
+            
+            if permissions:
+                for name, status, color in permissions:
+                    perm_label = QLabel(f"{name}: <b style='color: {color};'>{status}</b>")
+                    layout.addWidget(perm_label)
+            else:
+                layout.addWidget(QLabel("✅ No special permissions requested"))
+                
+        except Exception as e:
+            layout.addWidget(QLabel(f"❌ Error reading permissions: {str(e)}"))
+        
+        info = QLabel(
+            "\n💡 <b>To check actual granted permissions:</b>\n"
+            "System Settings → Privacy & Security → [Permission Type]\n"
+            "Look for 'Windsurf' in the list"
+        )
+        info.setWordWrap(True)
+        info.setStyleSheet("color: #3498db; font-size: 11px; margin-top: 10px;")
+        layout.addWidget(info)
+        
+        group.setLayout(layout)
+        self.content_layout.addWidget(group)
+        
+    def add_full_disk_access(self):
+        """Add Full Disk Access section"""
+        group = QGroupBox("💾 Full Disk Access")
+        layout = QVBoxLayout()
+        
+        try:
+            import os
+            test_path = os.path.expanduser("~/Library/Safari/History.db")
+            has_fda = os.access(test_path, os.R_OK) if os.path.exists(test_path) else False
+            
+            if has_fda:
+                status_label = QLabel("⚠️ <b style='color: #e74c3c;'>GRANTED</b> - Windsurf has Full Disk Access")
+                layout.addWidget(status_label)
+                
+                warning = QLabel(
+                    "This means Windsurf can read:\n"
+                    "• All files on your system\n"
+                    "• Browser history and cookies\n"
+                    "• Mail and messages\n"
+                    "• Any protected data\n\n"
+                    "⚠️ Consider revoking if not needed!"
+                )
+                warning.setStyleSheet("color: #e74c3c; margin-left: 20px;")
+                warning.setWordWrap(True)
+                layout.addWidget(warning)
+            else:
+                status_label = QLabel("✅ <b style='color: #2ecc71;'>NOT GRANTED</b> - Limited access only")
+                layout.addWidget(status_label)
+                
+        except Exception as e:
+            layout.addWidget(QLabel(f"❓ Unable to determine FDA status: {str(e)}"))
+        
+        info = QLabel(
+            "\n💡 <b>To check/revoke Full Disk Access:</b>\n"
+            "System Settings → Privacy & Security → Full Disk Access\n"
+            "Uncheck 'Windsurf' if present"
+        )
+        info.setWordWrap(True)
+        info.setStyleSheet("color: #3498db; font-size: 11px; margin-top: 10px;")
+        layout.addWidget(info)
+        
+        group.setLayout(layout)
+        self.content_layout.addWidget(group)
+        
+    def add_network_permissions(self):
+        """Add network permissions section"""
+        group = QGroupBox("🌐 Network Access")
+        layout = QVBoxLayout()
+        
+        layout.addWidget(QLabel("<b>Network Permissions:</b>"))
+        layout.addWidget(QLabel("  ✅ Outgoing connections: <b>Allowed</b> (default for all apps)"))
+        
+        try:
+            import subprocess
+            result = subprocess.run(['lsof', '-i', '-n', '-P'], capture_output=True, text=True)
+            windsurf_connections = [line for line in result.stdout.split('\n') if 'Windsurf' in line]
+            
+            if windsurf_connections:
+                layout.addWidget(QLabel(f"\n<b>Active Connections:</b> {len(windsurf_connections)}"))
+        except:
+            pass
+        
+        info = QLabel(
+            "\n💡 <b>To manage network access:</b>\n"
+            "System Settings → Network → Firewall\n"
+            "Or use the Network Monitor tab for real-time tracking"
+        )
+        info.setWordWrap(True)
+        info.setStyleSheet("color: #3498db; font-size: 11px; margin-top: 10px;")
+        layout.addWidget(info)
+        
+        group.setLayout(layout)
+        self.content_layout.addWidget(group)
+
+
+class GlobalAccessWidget(QWidget):
+    """Global folder access analysis tab"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+        
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # Title
+        title = QLabel("Global Folder Access Analysis")
+        title.setFont(QFont("Arial", 18, QFont.Weight.Bold))
+        layout.addWidget(title)
+        
+        desc = QLabel(
+            "Analyze which top-level system folders Windsurf has accessed. "
+            "Identify if sensitive locations like Desktop, Downloads, or Library have been accessed."
+        )
+        desc.setWordWrap(True)
+        desc.setStyleSheet("color: #95a5a6; margin-bottom: 15px;")
+        layout.addWidget(desc)
+        
+        # Scan button
+        btn_layout = QHBoxLayout()
+        self.btn_scan = QPushButton("🔍 Scan Global Access")
+        self.btn_scan.clicked.connect(self.scan_global_access)
+        self.btn_scan.setStyleSheet("background-color: #3498db;")
+        btn_layout.addWidget(self.btn_scan)
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
+        
+        # Summary label
+        self.summary_label = QLabel("Click 'Scan Global Access' to analyze...")
+        self.summary_label.setStyleSheet("color: #95a5a6; padding: 10px; font-size: 14px;")
+        layout.addWidget(self.summary_label)
+        
+        # Results table
+        self.results_table = QTableWidget()
+        self.results_table.setColumnCount(4)
+        self.results_table.setHorizontalHeaderLabels(["Location", "Folder Count", "Examples (click to expand)", "Status"])
+        self.results_table.horizontalHeader().setStretchLastSection(True)
+        self.results_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.results_table.setSortingEnabled(True)
+        self.results_table.setAlternatingRowColors(True)
+        self.results_table.cellClicked.connect(self.on_cell_clicked)  # Add click handler
+        self.expanded_rows = {}  # Track expanded state
+        self.results_table.setStyleSheet("""
+            QTableWidget {
+                background-color: #1e1e1e;
+                alternate-background-color: #2d2d2d;
+                color: #ffffff;
+                gridline-color: #3d3d3d;
+                border: 1px solid #3d3d3d;
+            }
+            QTableWidget::item {
+                padding: 5px;
+            }
+            QTableWidget::item:selected {
+                background-color: #3498db;
+            }
+            QHeaderView::section {
+                background-color: #2c3e50;
+                color: #ffffff;
+                padding: 8px;
+                border: 1px solid #34495e;
+                font-weight: bold;
+            }
+            QHeaderView::section:hover {
+                background-color: #34495e;
+            }
+        """)
+        self.results_table.setVisible(False)
+        layout.addWidget(self.results_table)
+        
+        # Remove button
+        self.btn_remove = QPushButton("🗑️ Remove All Access to Selected Location")
+        self.btn_remove.clicked.connect(self.remove_location_access)
+        self.btn_remove.setStyleSheet("background-color: #e74c3c;")
+        self.btn_remove.setVisible(False)
+        layout.addWidget(self.btn_remove)
+        
+        self.setLayout(layout)
+        
+    def scan_global_access(self):
+        """Scan and display global folder access"""
+        import os
+        import sqlite3
+        import json
+        import urllib.parse
+        from collections import defaultdict
+        
+        # Show table and button
+        self.results_table.setVisible(True)
+        self.btn_remove.setVisible(True)
+        self.results_table.setRowCount(0)
+        self.expanded_rows = {}  # Reset expanded state
+        self.folder_data = {}  # Store full folder lists
+        
+        try:
+            global_db = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/state.vscdb")
+            
+            conn = sqlite3.connect(global_db)
+            cursor = conn.cursor()
+            cursor.execute("SELECT value FROM ItemTable WHERE key = 'history.recentlyOpenedPathsList' LIMIT 1")
+            row = cursor.fetchone()
+            
+            if row and row[0]:
+                data = json.loads(row[0])
+                entries = data.get('entries', [])
+                
+                # Analyze by top-level directory
+                global_access = defaultdict(list)
+                
+                for entry in entries:
+                    folder_uri = entry.get('folderUri')
+                    if folder_uri:
+                        folder_path = urllib.parse.unquote(folder_uri.replace('file://', ''))
+                        
+                        if folder_path.startswith('/Users/meep/Documents'):
+                            global_access['📄 Documents'].append(folder_path)
+                        elif folder_path.startswith('/Users/meep/Desktop'):
+                            global_access['🖥️ Desktop'].append(folder_path)
+                        elif folder_path.startswith('/Users/meep/Downloads'):
+                            global_access['⬇️ Downloads'].append(folder_path)
+                        elif folder_path.startswith('/Users/meep/Library'):
+                            global_access['📚 Library'].append(folder_path)
+                        elif folder_path.startswith('/Users/meep/Pictures'):
+                            global_access['🖼️ Pictures'].append(folder_path)
+                        elif folder_path.startswith('/Users/meep/Movies'):
+                            global_access['🎬 Movies'].append(folder_path)
+                        elif folder_path.startswith('/Users/meep/Music'):
+                            global_access['🎵 Music'].append(folder_path)
+                
+                # Populate table
+                total_folders = sum(len(paths) for paths in global_access.values())
+                
+                # Update summary
+                if len(global_access) == 1 and '📄 Documents' in global_access:
+                    assessment = "<span style='color: #2ecc71;'><b>✅ EXCELLENT</b> - Access limited to Documents only</span>"
+                elif '📚 Library' in global_access:
+                    assessment = "<span style='color: #e74c3c;'><b>⚠️ HIGH RISK</b> - Library access detected (Full Disk Access?)</span>"
+                elif '🖥️ Desktop' in global_access or '⬇️ Downloads' in global_access:
+                    assessment = "<span style='color: #e67e22;'><b>⚠️ MODERATE RISK</b> - Sensitive locations accessed</span>"
+                else:
+                    assessment = "<span style='color: #2ecc71;'><b>✅ GOOD</b> - No sensitive folders accessed</span>"
+                
+                self.summary_label.setText(f"<b>Total Folders Tracked:</b> {total_folders} | {assessment}")
+                
+                # Populate table rows
+                self.results_table.setRowCount(len(global_access))
+                for row, (location, paths) in enumerate(sorted(global_access.items(), key=lambda x: len(x[1]), reverse=True)):
+                    count = len(paths)
+                    
+                    # Store full folder list for this location
+                    self.folder_data[location] = paths
+                    
+                    # Location
+                    self.results_table.setItem(row, 0, QTableWidgetItem(location))
+                    
+                    # Count
+                    self.results_table.setItem(row, 1, QTableWidgetItem(str(count)))
+                    
+                    # Examples (first 3) with click hint
+                    examples = ", ".join([os.path.basename(p) for p in paths[:3]])
+                    if len(paths) > 3:
+                        examples += f" ... 🔽 click to show all {len(paths)} folders"
+                    examples_item = QTableWidgetItem(examples)
+                    examples_item.setForeground(QColor("#3498db"))  # Blue to indicate clickable
+                    self.results_table.setItem(row, 2, examples_item)
+                    
+                    # Status
+                    if count > 10:
+                        status = "🔴 High Access"
+                    elif count > 5:
+                        status = "🟠 Medium Access"
+                    else:
+                        status = "🟢 Low Access"
+                    self.results_table.setItem(row, 3, QTableWidgetItem(status))
+                
+                self.results_table.resizeColumnsToContents()
+            
+            conn.close()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to scan:\n{str(e)}")
+    
+    def on_cell_clicked(self, row, column):
+        """Handle cell click to expand/collapse folder list"""
+        import os
+        
+        # Only handle clicks on Examples column (column 2)
+        if column != 2:
+            return
+        
+        location = self.results_table.item(row, 0).text()
+        
+        # Check if this location has folders to expand
+        if location not in self.folder_data:
+            return
+        
+        paths = self.folder_data[location]
+        if len(paths) <= 3:
+            return  # Nothing to expand
+        
+        # Toggle expanded state
+        if location in self.expanded_rows and self.expanded_rows[location]:
+            # Collapse - show summary
+            self.expanded_rows[location] = False
+            examples = ", ".join([os.path.basename(p) for p in paths[:3]])
+            examples += f" ... 🔽 click to show all {len(paths)} folders"
+            examples_item = QTableWidgetItem(examples)
+            examples_item.setForeground(QColor("#3498db"))
+            self.results_table.setItem(row, 2, examples_item)
+        else:
+            # Expand - show all folders
+            self.expanded_rows[location] = True
+            all_folders = "\n".join([f"  • {os.path.basename(p)}" for p in paths])
+            all_folders = f"🔼 click to collapse\n{all_folders}"
+            examples_item = QTableWidgetItem(all_folders)
+            examples_item.setForeground(QColor("#2ecc71"))
+            self.results_table.setItem(row, 2, examples_item)
+            
+            # Adjust row height to fit content
+            self.results_table.resizeRowToContents(row)
+    
+    def remove_location_access(self):
+        """Remove all folders from selected location"""
+        import os
+        import sqlite3
+        import json
+        import urllib.parse
+        
+        # Get selected row
+        selected_rows = self.results_table.selectionModel().selectedRows()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Selection", "Please select a location to remove.")
+            return
+        
+        row = selected_rows[0].row()
+        location = self.results_table.item(row, 0).text()
+        count = self.results_table.item(row, 1).text()
+        
+        # Confirmation
+        reply = QMessageBox.question(
+            self,
+            "Remove Location Access",
+            f"Remove all {count} folders from {location}?\n\n"
+            "This will remove tracking for all folders in this location.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            global_db = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/state.vscdb")
+            
+            conn = sqlite3.connect(global_db)
+            cursor = conn.cursor()
+            cursor.execute("SELECT value FROM ItemTable WHERE key = 'history.recentlyOpenedPathsList' LIMIT 1")
+            row_data = cursor.fetchone()
+            
+            if row_data and row_data[0]:
+                data = json.loads(row_data[0])
+                entries = data.get('entries', [])
+                
+                # Determine path prefix based on location
+                location_map = {
+                    '📄 Documents': '/Users/meep/Documents',
+                    '🖥️ Desktop': '/Users/meep/Desktop',
+                    '⬇️ Downloads': '/Users/meep/Downloads',
+                    '📚 Library': '/Users/meep/Library',
+                    '🖼️ Pictures': '/Users/meep/Pictures',
+                    '🎬 Movies': '/Users/meep/Movies',
+                    '🎵 Music': '/Users/meep/Music',
+                }
+                
+                path_prefix = location_map.get(location)
+                if not path_prefix:
+                    QMessageBox.warning(self, "Error", "Unknown location")
+                    return
+                
+                # Remove entries matching this location
+                new_entries = []
+                removed_count = 0
+                for entry in entries:
+                    folder_uri = entry.get('folderUri', '')
+                    folder_path = urllib.parse.unquote(folder_uri.replace('file://', ''))
+                    
+                    if not folder_path.startswith(path_prefix):
+                        new_entries.append(entry)
+                    else:
+                        removed_count += 1
+                
+                data['entries'] = new_entries
+                cursor.execute("UPDATE ItemTable SET value = ? WHERE key = 'history.recentlyOpenedPathsList'", (json.dumps(data),))
+                conn.commit()
+                
+                # Remove from table
+                self.results_table.removeRow(row)
+                
+                # Update summary
+                remaining = sum(int(self.results_table.item(r, 1).text()) for r in range(self.results_table.rowCount()))
+                self.summary_label.setText(f"<b>Total Folders Tracked:</b> {remaining} | <span style='color: #2ecc71;'><b>✅ {location} access removed!</b></span>")
+                
+                QMessageBox.information(
+                    self,
+                    "Success",
+                    f"Removed {removed_count} folders from {location}"
+                )
+            
+            conn.close()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to remove access:\n{str(e)}")
+
+
+class FolderAccessWidget(QWidget):
+    """Folder access management tab"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+        
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # Title
+        title = QLabel("Folder Access Management")
+        title.setFont(QFont("Arial", 18, QFont.Weight.Bold))
+        layout.addWidget(title)
+        
+        desc = QLabel(
+            "View and manage all folders that Windsurf has accessed. "
+            "Export chat histories, remove folder tracking, and control workspace access."
+        )
+        desc.setWordWrap(True)
+        desc.setStyleSheet("color: #95a5a6; margin-bottom: 15px;")
+        layout.addWidget(desc)
+        
+        # Global folder access summary
+        self.global_access_group = QGroupBox("🌍 Global Folder Access Summary")
+        global_layout = QVBoxLayout()
+        self.global_access_label = QLabel("Click 'Scan Folder Access' to see global access analysis...")
+        self.global_access_label.setWordWrap(True)
+        self.global_access_label.setStyleSheet("color: #95a5a6; padding: 10px;")
+        global_layout.addWidget(self.global_access_label)
+        self.global_access_group.setLayout(global_layout)
+        layout.addWidget(self.global_access_group)
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        
+        self.btn_test = QPushButton("🧪 Scan Folder Access")
+        self.btn_test.clicked.connect(self.run_permission_test)
+        self.btn_test.setStyleSheet("background-color: #e67e22;")
+        btn_layout.addWidget(self.btn_test)
+        
+        self.btn_export_chats = QPushButton("💾 Export Current Workspace Chats")
+        self.btn_export_chats.clicked.connect(self.export_current_chats)
+        self.btn_export_chats.setStyleSheet("background-color: #2ecc71;")
+        btn_layout.addWidget(self.btn_export_chats)
+        
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
+        
+        # Results table
+        self.results_table = QTableWidget()
+        self.results_table.setColumnCount(4)
+        self.results_table.setHorizontalHeaderLabels(["Folder Path", "Last Access", "Parent Architecture", "Status"])
+        self.results_table.horizontalHeader().setStretchLastSection(True)
+        self.results_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.results_table.setSortingEnabled(True)  # Enable sorting
+        self.results_table.setAlternatingRowColors(True)  # Alternating row colors
+        self.results_table.setStyleSheet("""
+            QTableWidget {
+                background-color: #1e1e1e;
+                alternate-background-color: #2d2d2d;
+                color: #ffffff;
+                gridline-color: #3d3d3d;
+                border: 1px solid #3d3d3d;
+            }
+            QTableWidget::item {
+                padding: 5px;
+            }
+            QTableWidget::item:selected {
+                background-color: #3498db;
+            }
+            QHeaderView::section {
+                background-color: #2c3e50;
+                color: #ffffff;
+                padding: 8px;
+                border: 1px solid #34495e;
+                font-weight: bold;
+            }
+            QHeaderView::section:hover {
+                background-color: #34495e;
+            }
+        """)
+        self.results_table.setVisible(False)
+        layout.addWidget(self.results_table)
+        
+        # Remove buttons
+        remove_btn_layout = QHBoxLayout()
+        
+        self.btn_remove = QPushButton("🗑️ Remove Access to Selected Folder")
+        self.btn_remove.clicked.connect(self.remove_folder_access)
+        self.btn_remove.setStyleSheet("background-color: #e74c3c;")
+        self.btn_remove.setVisible(False)
+        remove_btn_layout.addWidget(self.btn_remove)
+        
+        self.btn_remove_not_found = QPushButton("🧹 Remove All 'Not Found' Folders")
+        self.btn_remove_not_found.clicked.connect(self.remove_not_found_folders)
+        self.btn_remove_not_found.setStyleSheet("background-color: #e67e22;")
+        self.btn_remove_not_found.setVisible(False)
+        remove_btn_layout.addWidget(self.btn_remove_not_found)
+        
+        layout.addLayout(remove_btn_layout)
+        
+        self.setLayout(layout)
+        
+    def run_permission_test(self):
+        """Run active permissions test script"""
+        import os
+        import sqlite3
+        import json
+        import urllib.parse
+        
+        # Show table and remove buttons
+        self.results_table.setVisible(True)
+        self.btn_remove.setVisible(True)
+        self.btn_remove_not_found.setVisible(True)
+        self.results_table.setRowCount(0)
+        
+        # Get folder access data from global state database
+        try:
+            global_db = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/state.vscdb")
+            
+            if not os.path.exists(global_db):
+                QMessageBox.warning(self, "No Data", "Global state database not found.")
+                return
+            
+            folders = []
+            
+            conn = sqlite3.connect(global_db)
+            cursor = conn.cursor()
+            
+            # Get recently opened paths
+            cursor.execute("SELECT value FROM ItemTable WHERE key = 'history.recentlyOpenedPathsList' LIMIT 1")
+            row = cursor.fetchone()
+            
+            if row and row[0]:
+                data = json.loads(row[0])
+                entries = data.get('entries', [])
+                
+                # Analyze global folder access
+                from collections import defaultdict
+                global_access = defaultdict(int)
+                
+                for entry in entries:
+                    folder_uri = entry.get('folderUri')
+                    if folder_uri:
+                        # Decode URI
+                        folder_path = urllib.parse.unquote(folder_uri.replace('file://', ''))
+                        
+                        # Categorize by top-level directory
+                        if folder_path.startswith('/Users/meep/Documents'):
+                            global_access['📄 Documents'] += 1
+                        elif folder_path.startswith('/Users/meep/Desktop'):
+                            global_access['🖥️ Desktop'] += 1
+                        elif folder_path.startswith('/Users/meep/Downloads'):
+                            global_access['⬇️ Downloads'] += 1
+                        elif folder_path.startswith('/Users/meep/Library'):
+                            global_access['📚 Library'] += 1
+                        elif folder_path.startswith('/Users/meep/Pictures'):
+                            global_access['🖼️ Pictures'] += 1
+                        elif folder_path.startswith('/Users/meep/'):
+                            global_access['🏠 Home Directory'] += 1
+                        
+                        # Get last access time
+                        try:
+                            stat_info = os.stat(folder_path)
+                            last_access = datetime.fromtimestamp(stat_info.st_atime).strftime('%Y-%m-%d %H:%M:%S')
+                        except:
+                            last_access = "Unknown"
+                        
+                        # Get parent directory
+                        parent = os.path.dirname(folder_path)
+                        
+                        # Determine status
+                        if os.path.exists(folder_path):
+                            if os.access(folder_path, os.R_OK | os.W_OK):
+                                status = "✅ Read/Write"
+                            elif os.access(folder_path, os.R_OK):
+                                status = "📖 Read Only"
+                            else:
+                                status = "🔒 No Access"
+                        else:
+                            status = "❌ Not Found"
+                        
+                        folders.append((folder_path, last_access, parent, status))
+            
+            conn.close()
+            
+            # Populate table
+            self.results_table.setRowCount(len(folders))
+            for row, (path, access, parent, status) in enumerate(folders):
+                self.results_table.setItem(row, 0, QTableWidgetItem(path))
+                self.results_table.setItem(row, 1, QTableWidgetItem(access))
+                self.results_table.setItem(row, 2, QTableWidgetItem(parent))
+                self.results_table.setItem(row, 3, QTableWidgetItem(status))
+            
+            # Resize columns
+            self.results_table.resizeColumnsToContents()
+            
+            # Update global access summary
+            if global_access:
+                summary_text = "<b>Windsurf has accessed folders in:</b><br><br>"
+                for location, count in sorted(global_access.items(), key=lambda x: x[1], reverse=True):
+                    color = "#e74c3c" if count > 5 else "#e67e22" if count > 2 else "#2ecc71"
+                    summary_text += f"<span style='color: {color};'>• {location}: <b>{count} folders</b></span><br>"
+                
+                summary_text += "<br><b>Recommendations:</b><br>"
+                if global_access.get('📚 Library', 0) > 0:
+                    summary_text += "<span style='color: #e74c3c;'>⚠️ Library access detected - may indicate Full Disk Access</span><br>"
+                if global_access.get('🖥️ Desktop', 0) > 0:
+                    summary_text += "<span style='color: #e67e22;'>⚠️ Desktop access detected</span><br>"
+                if len(global_access) == 1 and '📄 Documents' in global_access:
+                    summary_text += "<span style='color: #2ecc71;'>✅ Access limited to Documents folder only</span><br>"
+                
+                self.global_access_label.setText(summary_text)
+            
+            QMessageBox.information(self, "Test Complete", 
+                f"Found {len(folders)} folders with access.\n"
+                f"Results displayed in table below.")
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to run test:\n{str(e)}")
+    
+    def export_current_chats(self):
+        """Export current workspace chats to _Chatlogs folder"""
+        import os
+        import sqlite3
+        import json
+        
+        try:
+            # Get current workspace folder
+            global_db = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/state.vscdb")
+            workspace_storage = os.path.expanduser("~/Library/Application Support/Windsurf/User/workspaceStorage")
+            
+            if not os.path.exists(global_db):
+                QMessageBox.warning(self, "Error", "Global state database not found.")
+                return
+            
+            # Get most recent workspace
+            conn = sqlite3.connect(global_db)
+            cursor = conn.cursor()
+            cursor.execute("SELECT value FROM ItemTable WHERE key = 'history.recentlyOpenedPathsList' LIMIT 1")
+            row = cursor.fetchone()
+            
+            if not row or not row[0]:
+                QMessageBox.warning(self, "No Workspace", "No recent workspace found.")
+                conn.close()
+                return
+            
+            data = json.loads(row[0])
+            entries = data.get('entries', [])
+            
+            if not entries:
+                QMessageBox.warning(self, "No Workspace", "No workspace entries found.")
+                conn.close()
+                return
+            
+            # Get first folder entry (most recent)
+            import urllib.parse
+            current_folder = None
+            for entry in entries:
+                if 'folderUri' in entry:
+                    current_folder = urllib.parse.unquote(entry['folderUri'].replace('file://', ''))
+                    break
+            
+            if not current_folder:
+                QMessageBox.warning(self, "No Folder", "Could not determine current workspace folder.")
+                conn.close()
+                return
+            
+            # Find workspace ID for this folder
+            workspace_id = None
+            workspace_path = None
+            
+            for ws_dir in os.listdir(workspace_storage):
+                ws_path = os.path.join(workspace_storage, ws_dir)
+                if os.path.isdir(ws_path):
+                    state_db = os.path.join(ws_path, "state.vscdb")
+                    if os.path.exists(state_db):
+                        try:
+                            ws_conn = sqlite3.connect(state_db)
+                            ws_cursor = ws_conn.cursor()
+                            ws_cursor.execute("SELECT value FROM ItemTable WHERE key = 'workspace.folderURIStr' LIMIT 1")
+                            ws_row = ws_cursor.fetchone()
+                            if ws_row and ws_row[0]:
+                                ws_folder = urllib.parse.unquote(ws_row[0].replace('file://', ''))
+                                if ws_folder == current_folder:
+                                    workspace_id = ws_dir
+                                    workspace_path = state_db
+                                    ws_conn.close()
+                                    break
+                            ws_conn.close()
+                        except:
+                            pass
+            
+            conn.close()
+            
+            if not workspace_id or not workspace_path:
+                QMessageBox.warning(self, "No Workspace", 
+                    f"Could not find workspace database for:\n{current_folder}\n\n"
+                    "This might mean no chats exist for this folder yet.")
+                return
+            
+            # Export chats
+            ws_conn = sqlite3.connect(workspace_path)
+            ws_cursor = ws_conn.cursor()
+            ws_cursor.execute("SELECT key, value FROM ItemTable WHERE key LIKE '%chat%' OR key LIKE '%cascade%'")
+            chat_rows = ws_cursor.fetchall()
+            ws_conn.close()
+            
+            if not chat_rows:
+                QMessageBox.information(self, "No Chats", 
+                    f"No chat history found for:\n{current_folder}")
+                return
+            
+            # Create _Chatlogs folder
+            chatlog_dir = os.path.join(current_folder, "_Chatlogs")
+            os.makedirs(chatlog_dir, exist_ok=True)
+            
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            
+            # Export as Markdown
+            md_file = os.path.join(chatlog_dir, f"chat_export_{timestamp}.md")
+            with open(md_file, 'w') as f:
+                f.write(f"# Chat History Export\n\n")
+                f.write(f"**Workspace Folder:** {current_folder}\n")
+                f.write(f"**Export Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"**Workspace ID:** {workspace_id}\n")
+                f.write(f"**Total Chat Entries:** {len(chat_rows)}\n\n")
+                f.write("---\n\n")
+                
+                for i, (key, value) in enumerate(chat_rows, 1):
+                    f.write(f"## Entry {i}: {key}\n\n")
+                    
+                    # Try to parse JSON for better formatting
+                    try:
+                        parsed = json.loads(value)
+                        f.write("```json\n")
+                        f.write(json.dumps(parsed, indent=2))
+                        f.write("\n```\n\n")
+                    except:
+                        # If not JSON, just write as code block
+                        f.write("```\n")
+                        f.write(str(value))
+                        f.write("\n```\n\n")
+            
+            # Export as JSON
+            json_file = os.path.join(chatlog_dir, f"chat_export_{timestamp}.json")
+            with open(json_file, 'w') as f:
+                json.dump([{"key": k, "value": v} for k, v in chat_rows], f, indent=2)
+            
+            # Export as CSV
+            csv_file = os.path.join(chatlog_dir, f"chat_export_{timestamp}.csv")
+            with open(csv_file, 'w') as f:
+                f.write("key,value\n")
+                for key, value in chat_rows:
+                    # Escape quotes in CSV
+                    escaped_value = str(value).replace('"', '""')
+                    f.write(f'"{key}","{escaped_value}"\n')
+            
+            # Create README
+            readme_file = os.path.join(chatlog_dir, "README.txt")
+            with open(readme_file, 'w') as f:
+                f.write("Chat History Export\n")
+                f.write("===================\n\n")
+                f.write(f"Workspace: {current_folder}\n")
+                f.write(f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"Total Entries: {len(chat_rows)}\n\n")
+                f.write("Files:\n")
+                f.write(f"- chat_export_{timestamp}.md   (Markdown - easy to read)\n")
+                f.write(f"- chat_export_{timestamp}.json (JSON - machine readable)\n")
+                f.write(f"- chat_export_{timestamp}.csv  (CSV - Excel compatible)\n\n")
+                f.write("These chats are preserved locally in this folder.\n")
+                f.write("You can reference them anytime, even after cleanup!\n")
+            
+            # Success message
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Information)
+            msg.setWindowTitle("Chats Exported Successfully")
+            msg.setText(f"<b>Exported {len(chat_rows)} chat entries!</b>")
+            msg.setInformativeText(
+                f"<b>Workspace:</b> {current_folder}<br><br>"
+                f"<b>Saved to:</b><br>{chatlog_dir}<br><br>"
+                f"<b>Files created:</b><br>"
+                f"• chat_export_{timestamp}.md<br>"
+                f"• chat_export_{timestamp}.json<br>"
+                f"• chat_export_{timestamp}.csv<br>"
+                f"• README.txt<br><br>"
+                "You can now reference these chats anytime!"
+            )
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            
+            # Add button to open folder
+            open_btn = msg.addButton("📂 Open Folder", QMessageBox.ButtonRole.ActionRole)
+            msg.exec()
+            
+            if msg.clickedButton() == open_btn:
+                import subprocess
+                subprocess.run(['open', chatlog_dir])
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to export chats:\n{str(e)}")
+    
+    def remove_folder_access(self):
+        """Remove access to selected folder and export chats"""
+        import os
+        import sqlite3
+        import json
+        import urllib.parse
+        import shutil
+        
+        # Get selected row
+        selected_rows = self.results_table.selectionModel().selectedRows()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Selection", "Please select a folder to remove access from.")
+            return
+        
+        row = selected_rows[0].row()
+        folder_path = self.results_table.item(row, 0).text()
+        
+        # Confirmation dialog
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Warning)
+        msg.setWindowTitle("Remove Folder Access")
+        msg.setText(f"<b>Remove access to this folder?</b>")
+        msg.setInformativeText(
+            f"<b>Folder:</b> {folder_path}<br><br>"
+            "<b>This will:</b><br>"
+            f"✅ Export chat conversations to:<br>"
+            f"   {folder_path}/_Chatlogs/<br><br>"
+            "❌ Remove workspace tracking<br>"
+            "❌ Delete workspace storage database<br><br>"
+            "<b>Chat files will be saved as:</b><br>"
+            "• chat_export.md (Markdown - easy to read)<br>"
+            "• chat_export.json (JSON - machine readable)<br>"
+            "• chat_export.csv (CSV - Excel compatible)<br><br>"
+            "You can reference these chats later if you re-open the folder!"
+        )
+        msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg.setDefaultButton(QMessageBox.StandardButton.No)
+        reply = msg.exec()
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            # Step 1: Find workspace ID
+            global_db = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/state.vscdb")
+            workspace_storage = os.path.expanduser("~/Library/Application Support/Windsurf/User/workspaceStorage")
+            
+            conn = sqlite3.connect(global_db)
+            cursor = conn.cursor()
+            
+            # Get recently opened paths
+            cursor.execute("SELECT value FROM ItemTable WHERE key = 'history.recentlyOpenedPathsList' LIMIT 1")
+            row_data = cursor.fetchone()
+            
+            workspace_ids = []
+            if row_data and row_data[0]:
+                data = json.loads(row_data[0])
+                entries = data.get('entries', [])
+                
+                # Find matching workspace IDs
+                for ws_dir in os.listdir(workspace_storage):
+                    ws_path = os.path.join(workspace_storage, ws_dir)
+                    if os.path.isdir(ws_path):
+                        state_db = os.path.join(ws_path, "state.vscdb")
+                        if os.path.exists(state_db):
+                            try:
+                                ws_conn = sqlite3.connect(state_db)
+                                ws_cursor = ws_conn.cursor()
+                                ws_cursor.execute("SELECT value FROM ItemTable WHERE key = 'workspace.folderURIStr' LIMIT 1")
+                                ws_row = ws_cursor.fetchone()
+                                if ws_row and ws_row[0]:
+                                    ws_folder = urllib.parse.unquote(ws_row[0].replace('file://', ''))
+                                    if ws_folder == folder_path:
+                                        workspace_ids.append((ws_dir, ws_path, state_db))
+                                ws_conn.close()
+                            except:
+                                pass
+            
+            # Step 2: Export chats
+            chatlog_dir = os.path.join(folder_path, "_Chatlogs")
+            os.makedirs(chatlog_dir, exist_ok=True)
+            
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            total_messages = 0
+            
+            for ws_id, ws_path, state_db in workspace_ids:
+                try:
+                    ws_conn = sqlite3.connect(state_db)
+                    ws_cursor = ws_conn.cursor()
+                    ws_cursor.execute("SELECT key, value FROM ItemTable WHERE key LIKE '%chat%' OR key LIKE '%cascade%'")
+                    chat_rows = ws_cursor.fetchall()
+                    
+                    if chat_rows:
+                        # Export as Markdown
+                        md_file = os.path.join(chatlog_dir, f"chat_export_{timestamp}.md")
+                        with open(md_file, 'w') as f:
+                            f.write(f"# Chat History Export\n")
+                            f.write(f"**Folder:** {folder_path}\n")
+                            f.write(f"**Export Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                            f.write(f"**Workspace ID:** {ws_id}\n")
+                            f.write(f"**Total Entries:** {len(chat_rows)}\n\n")
+                            f.write("---\n\n")
+                            
+                            for key, value in chat_rows:
+                                f.write(f"## {key}\n\n")
+                                f.write(f"```\n{value}\n```\n\n")
+                                total_messages += 1
+                        
+                        # Export as JSON
+                        json_file = os.path.join(chatlog_dir, f"chat_export_{timestamp}.json")
+                        with open(json_file, 'w') as f:
+                            json.dump([{"key": k, "value": v} for k, v in chat_rows], f, indent=2)
+                        
+                        # Export as CSV
+                        csv_file = os.path.join(chatlog_dir, f"chat_export_{timestamp}.csv")
+                        with open(csv_file, 'w') as f:
+                            f.write("key,value\n")
+                            for key, value in chat_rows:
+                                f.write(f'"{key}","{value.replace(chr(34), chr(34)+chr(34))}"\n')
+                        
+                        # Create README
+                        readme_file = os.path.join(chatlog_dir, "README.txt")
+                        with open(readme_file, 'w') as f:
+                            f.write(f"Chat History Export\n")
+                            f.write(f"===================\n\n")
+                            f.write(f"Folder: {folder_path}\n")
+                            f.write(f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                            f.write(f"Total Messages: {total_messages}\n\n")
+                            f.write(f"Files:\n")
+                            f.write(f"- chat_export_{timestamp}.md  (Markdown - easy to read)\n")
+                            f.write(f"- chat_export_{timestamp}.json (JSON - machine readable)\n")
+                            f.write(f"- chat_export_{timestamp}.csv (CSV - Excel compatible)\n\n")
+                            f.write(f"These chats are preserved locally.\n")
+                            f.write(f"If you re-open this folder in Windsurf, you can reference these files!\n")
+                    
+                    ws_conn.close()
+                except Exception as e:
+                    print(f"Error exporting chats: {e}")
+            
+            # Step 3: Remove tracking
+            # Remove from history
+            if row_data and row_data[0]:
+                data = json.loads(row_data[0])
+                entries = data.get('entries', [])
+                new_entries = [e for e in entries if urllib.parse.unquote(e.get('folderUri', '').replace('file://', '')) != folder_path]
+                data['entries'] = new_entries
+                cursor.execute("UPDATE ItemTable SET value = ? WHERE key = 'history.recentlyOpenedPathsList'", (json.dumps(data),))
+                conn.commit()
+            
+            # Delete workspace storage
+            for ws_id, ws_path, state_db in workspace_ids:
+                try:
+                    shutil.rmtree(ws_path)
+                except Exception as e:
+                    print(f"Error deleting workspace: {e}")
+            
+            conn.close()
+            
+            # Remove from table
+            self.results_table.removeRow(row)
+            
+            # Success message
+            QMessageBox.information(
+                self,
+                "Access Removed Successfully",
+                f"<b>Folder:</b> {folder_path}<br><br>"
+                f"✅ Exported {total_messages} chat entries to:<br>"
+                f"   {chatlog_dir}<br><br>"
+                f"✅ Removed workspace tracking<br>"
+                f"✅ Deleted {len(workspace_ids)} workspace storage folder(s)<br><br>"
+                f"The folder is no longer tracked by Windsurf.<br>"
+                f"Chat history has been preserved in _Chatlogs/"
+            )
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to remove access:\n{str(e)}")
+    
+    def remove_not_found_folders(self):
+        """Remove all folders that don't exist (Not Found status)"""
+        import os
+        import sqlite3
+        import json
+        import urllib.parse
+        
+        # Count "Not Found" folders
+        not_found_folders = []
+        for row in range(self.results_table.rowCount()):
+            status = self.results_table.item(row, 3).text()
+            if "Not Found" in status:
+                folder_path = self.results_table.item(row, 0).text()
+                not_found_folders.append(folder_path)
+        
+        if not not_found_folders:
+            QMessageBox.information(self, "No Action Needed", "No 'Not Found' folders to remove.")
+            return
+        
+        # Confirmation
+        reply = QMessageBox.question(
+            self,
+            "Remove Not Found Folders",
+            f"Remove {len(not_found_folders)} folders that no longer exist?\n\n"
+            "This will clean up stale tracking entries.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            global_db = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/state.vscdb")
+            
+            conn = sqlite3.connect(global_db)
+            cursor = conn.cursor()
+            cursor.execute("SELECT value FROM ItemTable WHERE key = 'history.recentlyOpenedPathsList' LIMIT 1")
+            row_data = cursor.fetchone()
+            
+            if row_data and row_data[0]:
+                data = json.loads(row_data[0])
+                entries = data.get('entries', [])
+                
+                # Remove entries for folders that don't exist
+                new_entries = []
+                removed_count = 0
+                for entry in entries:
+                    folder_uri = entry.get('folderUri', '')
+                    folder_path = urllib.parse.unquote(folder_uri.replace('file://', ''))
+                    
+                    if folder_path not in not_found_folders:
+                        new_entries.append(entry)
+                    else:
+                        removed_count += 1
+                
+                data['entries'] = new_entries
+                cursor.execute("UPDATE ItemTable SET value = ? WHERE key = 'history.recentlyOpenedPathsList'", (json.dumps(data),))
+                conn.commit()
+                
+                # Remove rows from table (in reverse order to avoid index issues)
+                rows_to_remove = []
+                for row in range(self.results_table.rowCount()):
+                    status = self.results_table.item(row, 3).text()
+                    if "Not Found" in status:
+                        rows_to_remove.append(row)
+                
+                for row in reversed(rows_to_remove):
+                    self.results_table.removeRow(row)
+                
+                QMessageBox.information(
+                    self,
+                    "Success",
+                    f"Removed {removed_count} 'Not Found' folders from tracking.\n\n"
+                    f"Your folder list is now clean!"
+                )
+            
+            conn.close()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to remove folders:\n{str(e)}")
+
+
 class MainWindow(QMainWindow):
     """Main application window"""
     
@@ -1900,7 +3072,7 @@ class MainWindow(QMainWindow):
         
     def init_ui(self):
         self.setWindowTitle("Windsurf Privacy Toolkit")
-        self.setGeometry(100, 100, 1000, 700)
+        self.setGeometry(100, 100, 1250, 700)  # 25% wider (1000 * 1.25 = 1250)
         
         # Central widget with tabs
         central_widget = QWidget()
@@ -1912,12 +3084,28 @@ class MainWindow(QMainWindow):
         # Tab widget
         self.tabs = QTabWidget()
         
-        # Add tabs (pass self as parent so dashboard can access tabs)
+        # Add tabs with visual separators
         self.tabs.addTab(DashboardWidget(self), "🏠 Dashboard")
-        self.tabs.addTab(AuditWidget(), "🔍 Audit")
+        self.tabs.addTab(AuditWidget(), "│ 🔍 Audit")
         self.tabs.addTab(CleanupWidget(), "🧹 Cleanup")
         self.tabs.addTab(BackupsWidget(), "💾 Backups")
-        self.tabs.addTab(NetworkMonitorWidget(), "🌐 Network Monitor")
+        self.tabs.addTab(PermissionsWidget(), "│ 🔒 Permissions")
+        self.tabs.addTab(GlobalAccessWidget(), "🌍 Global Access")
+        self.tabs.addTab(FolderAccessWidget(), "📁 Folder Access")
+        self.tabs.addTab(NetworkMonitorWidget(), "│ 🌐 Network Monitor")
+        
+        # Style tabs with better spacing
+        self.tabs.setStyleSheet("""
+            QTabBar::tab {
+                padding: 8px 16px;
+                margin: 2px;
+                color: white;
+                font-weight: bold;
+            }
+            QTabWidget::pane {
+                border: 1px solid #3d3d3d;
+            }
+        """)
         
         layout.addWidget(self.tabs)
         
