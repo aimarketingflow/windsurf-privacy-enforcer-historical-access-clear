@@ -2113,6 +2113,18 @@ class GlobalAccessWidget(QWidget):
         self.btn_scan.clicked.connect(self.scan_global_access)
         self.btn_scan.setStyleSheet("background-color: #3498db;")
         btn_layout.addWidget(self.btn_scan)
+        
+        self.btn_lock_documents = QPushButton("🔒 Lock to Documents Only")
+        self.btn_lock_documents.clicked.connect(self.lock_to_documents)
+        self.btn_lock_documents.setStyleSheet("background-color: #27ae60;")
+        self.btn_lock_documents.setVisible(False)
+        btn_layout.addWidget(self.btn_lock_documents)
+        
+        self.btn_view_log = QPushButton("📋 View Change Log")
+        self.btn_view_log.clicked.connect(self.view_change_log)
+        self.btn_view_log.setStyleSheet("background-color: #95a5a6;")
+        btn_layout.addWidget(self.btn_view_log)
+        
         btn_layout.addStretch()
         layout.addLayout(btn_layout)
         
@@ -2176,12 +2188,13 @@ class GlobalAccessWidget(QWidget):
         import urllib.parse
         from collections import defaultdict
         
-        # Show table and button
+        # Show table and buttons
         self.results_table.setVisible(True)
         self.btn_remove.setVisible(True)
         self.results_table.setRowCount(0)
         self.expanded_rows = {}  # Reset expanded state
         self.folder_data = {}  # Store full folder lists
+        self.current_locations = []  # Track current locations for lock button
         
         try:
             global_db = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/state.vscdb")
@@ -2232,6 +2245,13 @@ class GlobalAccessWidget(QWidget):
                     assessment = "<span style='color: #2ecc71;'><b>✅ GOOD</b> - No sensitive folders accessed</span>"
                 
                 self.summary_label.setText(f"<b>Total Folders Tracked:</b> {total_folders} | {assessment}")
+                
+                # Store current locations and show lock button if needed
+                self.current_locations = list(global_access.keys())
+                if len(global_access) > 1 or (len(global_access) == 1 and '📄 Documents' not in global_access):
+                    self.btn_lock_documents.setVisible(True)
+                else:
+                    self.btn_lock_documents.setVisible(False)
                 
                 # Populate table rows
                 self.results_table.setRowCount(len(global_access))
@@ -2400,6 +2420,195 @@ class GlobalAccessWidget(QWidget):
             
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to remove access:\n{str(e)}")
+    
+    def lock_to_documents(self):
+        """Lock Windsurf access to Documents folder only"""
+        import os
+        import sqlite3
+        import json
+        import urllib.parse
+        
+        # Show what will be removed
+        non_documents = [loc for loc in self.current_locations if loc != '📄 Documents']
+        
+        if not non_documents:
+            QMessageBox.information(self, "Already Locked", "Access is already limited to Documents only!")
+            return
+        
+        # Confirmation dialog
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Warning)
+        msg.setWindowTitle("Lock to Documents Only")
+        msg.setText("<b>🔒 Restrict Windsurf to Documents folder only?</b>")
+        
+        locations_text = "<br>".join([f"  • {loc}" for loc in non_documents])
+        msg.setInformativeText(
+            f"<b>This will remove access to:</b><br>{locations_text}<br><br>"
+            "<b>Only Documents folder will remain tracked.</b><br><br>"
+            "This change will be logged with timestamp."
+        )
+        msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg.setDefaultButton(QMessageBox.StandardButton.No)
+        reply = msg.exec()
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            global_db = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/state.vscdb")
+            
+            conn = sqlite3.connect(global_db)
+            cursor = conn.cursor()
+            cursor.execute("SELECT value FROM ItemTable WHERE key = 'history.recentlyOpenedPathsList' LIMIT 1")
+            row_data = cursor.fetchone()
+            
+            if row_data and row_data[0]:
+                data = json.loads(row_data[0])
+                entries = data.get('entries', [])
+                
+                # Keep only Documents folders
+                new_entries = []
+                removed_count = 0
+                removed_locations = []
+                
+                for entry in entries:
+                    folder_uri = entry.get('folderUri', '')
+                    folder_path = urllib.parse.unquote(folder_uri.replace('file://', ''))
+                    
+                    if folder_path.startswith('/Users/meep/Documents'):
+                        new_entries.append(entry)
+                    else:
+                        removed_count += 1
+                        # Track which location this was from
+                        if folder_path.startswith('/Users/meep/Desktop'):
+                            if '🖥️ Desktop' not in removed_locations:
+                                removed_locations.append('🖥️ Desktop')
+                        elif folder_path.startswith('/Users/meep/Downloads'):
+                            if '⬇️ Downloads' not in removed_locations:
+                                removed_locations.append('⬇️ Downloads')
+                        elif folder_path.startswith('/Users/meep/Library'):
+                            if '📚 Library' not in removed_locations:
+                                removed_locations.append('📚 Library')
+                
+                data['entries'] = new_entries
+                cursor.execute("UPDATE ItemTable SET value = ? WHERE key = 'history.recentlyOpenedPathsList'", (json.dumps(data),))
+                conn.commit()
+                
+                # Log the change
+                self.log_access_change("LOCKED_TO_DOCUMENTS", removed_locations, removed_count)
+                
+                # Update UI
+                self.btn_lock_documents.setVisible(False)
+                self.scan_global_access()  # Refresh
+                
+                QMessageBox.information(
+                    self,
+                    "✅ Locked to Documents",
+                    f"<b>Successfully locked to Documents only!</b><br><br>"
+                    f"Removed {removed_count} folders from:<br>" +
+                    "<br>".join([f"  • {loc}" for loc in removed_locations]) +
+                    "<br><br>This change has been logged."
+                )
+            
+            conn.close()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to lock access:\n{str(e)}")
+    
+    def log_access_change(self, action, locations, count):
+        """Log access changes to a file"""
+        import os
+        from datetime import datetime
+        
+        log_file = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/access_change_log.txt")
+        
+        try:
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            with open(log_file, 'a') as f:
+                f.write(f"\n{'='*60}\n")
+                f.write(f"Timestamp: {timestamp}\n")
+                f.write(f"Action: {action}\n")
+                f.write(f"Locations Affected: {', '.join(locations)}\n")
+                f.write(f"Folders Removed: {count}\n")
+                f.write(f"{'='*60}\n")
+        except Exception as e:
+            print(f"Failed to log change: {e}")
+    
+    def view_change_log(self):
+        """View the access change log"""
+        import os
+        
+        log_file = os.path.expanduser("~/Library/Application Support/Windsurf/User/globalStorage/access_change_log.txt")
+        
+        if not os.path.exists(log_file):
+            QMessageBox.information(
+                self,
+                "No Changes Logged",
+                "No access changes have been logged yet.\n\n"
+                "Changes will be logged when you:\n"
+                "• Lock to Documents only\n"
+                "• Remove location access\n"
+                "• Make other access modifications"
+            )
+            return
+        
+        try:
+            with open(log_file, 'r') as f:
+                log_content = f.read()
+            
+            # Create dialog to show log
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Access Change Log")
+            dialog.setGeometry(100, 100, 700, 500)
+            
+            layout = QVBoxLayout()
+            
+            # Log content
+            log_text = QTextEdit()
+            log_text.setReadOnly(True)
+            log_text.setPlainText(log_content)
+            log_text.setStyleSheet("background-color: #1e1e1e; color: #d4d4d4; font-family: monospace;")
+            layout.addWidget(log_text)
+            
+            # Buttons
+            btn_layout = QHBoxLayout()
+            
+            clear_btn = QPushButton("🗑️ Clear Log")
+            clear_btn.clicked.connect(lambda: self.clear_log(dialog, log_file))
+            clear_btn.setStyleSheet("background-color: #e74c3c;")
+            btn_layout.addWidget(clear_btn)
+            
+            close_btn = QPushButton("Close")
+            close_btn.clicked.connect(dialog.close)
+            btn_layout.addWidget(close_btn)
+            
+            layout.addLayout(btn_layout)
+            
+            dialog.setLayout(layout)
+            dialog.exec()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to read log:\n{str(e)}")
+    
+    def clear_log(self, dialog, log_file):
+        """Clear the change log"""
+        reply = QMessageBox.question(
+            self,
+            "Clear Log",
+            "Are you sure you want to clear the access change log?\n\n"
+            "This cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                import os
+                os.remove(log_file)
+                QMessageBox.information(self, "Log Cleared", "Access change log has been cleared.")
+                dialog.close()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to clear log:\n{str(e)}")
 
 
 class FolderAccessWidget(QWidget):
