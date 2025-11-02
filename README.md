@@ -6,6 +6,9 @@
 [![Platform: macOS](https://img.shields.io/badge/Platform-macOS-blue.svg)](https://www.apple.com/macos/)
 [![Shell: Bash](https://img.shields.io/badge/Shell-Bash-green.svg)](https://www.gnu.org/software/bash/)
 
+> **⚠️ IMPORTANT UPDATE: Chat Backup Feature Status**  
+> As of the latest Windsurf updates, chat conversations are now stored on Codeium's cloud servers rather than locally. The `backup_windsurf_chat.sh` script and related chat backup features **no longer work** as intended. We are actively working on an alternative solution that may involve API-based backups or local conversation logging. Stay tuned for updates.
+
 > **🎨 NEW: PyQt6 GUI Available!**  
 > We've added a modern graphical interface (`windsurf_privacy_gui.py`) for easier use. **Note:** The GUI is currently in active development and may contain bugs. Please report any issues you encounter via [GitHub Issues](https://github.com/aimarketingflow/windsurf-privacy-enforcer-historical-access-clear/issues). See [GUI_README.md](GUI_README.md) for details.
 
@@ -162,39 +165,31 @@ Run BEFORE cleanup to verify what will be preserved:
 ./test_historical_access_deletion.sh
 ```
 
-### 2e. `backup_windsurf_chat.sh` 💾
-**Chat history backup tool (NEW)**
+### 2e. `backup_windsurf_chat.sh` 💾 ⚠️ **DEPRECATED**
+**Chat history backup tool (NO LONGER FUNCTIONAL)**
 
-Exports all Windsurf/Cascade chat histories to readable formats:
-- **CSV format** - Open in Excel/Numbers/Google Sheets
-- **JSON format** - For programmatic access
-- **Full database backup** - For complete restoration
+> **⚠️ DEPRECATION NOTICE:**  
+> This tool is **no longer functional** as of the latest Windsurf updates. Windsurf now stores chat conversations on Codeium's cloud servers rather than in local databases. The script will run but will find no chat data to backup.
+>
+> **Status:** We are working on an alternative solution that may include:
+> - API-based cloud backup (if Codeium provides an API)
+> - Local conversation logging during sessions
+> - Export functionality through Windsurf's UI (if available)
+>
+> **For now:** Chat history is only accessible through the Windsurf interface and stored on Codeium's servers.
 
-**Features:**
-- Backs up all 21 workspaces automatically
-- Creates readable CSV files for each workspace
-- Includes restoration instructions
-- Preserves all chat metadata
+~~Exports all Windsurf/Cascade chat histories to readable formats:~~
+- ~~**CSV format** - Open in Excel/Numbers/Google Sheets~~
+- ~~**JSON format** - For programmatic access~~
+- ~~**Full database backup** - For complete restoration~~
 
-**Usage:**
-```bash
-./backup_windsurf_chat.sh
-```
+**Previous Features (No longer working):**
+- ~~Backs up all workspaces automatically~~
+- ~~Creates readable CSV files for each workspace~~
+- ~~Includes restoration instructions~~
+- ~~Preserves all chat metadata~~
 
-**Output:**
-- `~/WindsurfChatBackup_YYYYMMDD_HHMMSS/`
-  - Each workspace folder contains:
-    - `chat_data.csv` - Spreadsheet format
-    - `chat_data.json` - JSON format
-    - `state.vscdb.backup` - Full database
-    - `README.txt` - Instructions
-
-**Integrated into Enhanced Cleanup:**
-The enhanced cleanup script now offers backup options:
-1. No backup (skip)
-2. Full backup (all Windsurf data)
-3. Chat history only (recommended)
-4. Full backup + separate chat export
+**Note:** The enhanced cleanup script's chat backup options are also affected by this change.
 
 ### 3. `sandbox_windsurf.sh` 🔒
 **Interactive sandboxing wizard**
